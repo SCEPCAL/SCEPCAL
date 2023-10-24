@@ -21,6 +21,13 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib64
 export PYTHONPATH=$PYTHONPATH:$PWD/python
 ```
 
+Everytime you log in:
+```sh
+source setupSCEPCAL.sh
+```
+To get the correct env.
+
+
 ### Generating events
 Generating events relies on [k4Gen](https://github.com/HEP-FCC/k4Gen), generates primary particle(s) in `HepMC` format with either particle gun or `Pythia8` then converts it to `edm4hep`. Please refer to [k4Gen/options](https://github.com/HEP-FCC/k4Gen/tree/b7c735e401298a8c72915819dc0404a83f46a0fe/k4Gen/options) for example configurations.
 
@@ -71,18 +78,31 @@ Optical physics is NOT simulated by the `GEANT4` default physics list due to ext
 
 ### Running on Condor
 
-Adjust the files `SCEPCALsim.sh` and `SCEPCALsim.sub` to your configuration and then
+Go to `condor_submission` folder. 
+Here you find a template of the gaudi config to run the SCEPCal Simulation `runSCEPCalsimTemplate.py` and the `submitJobs.py` scripts.
+The `submitJobs.py` creates the gaudi configs to be run for each simulation job from the template and send the jobs on condor.
+It also set up the right env to run SCEPCal simulation on condor.
 
-```
-condor_submit SCEPCALsim.sub
+Here an examples of usage:
+
+
+```sh
+python submitJobs.py \
+--label MYLABEL \ 
+--basedir MYSCEPCALDIR \
+--cfg runSCEPCALsimTemplate.py \ # you can provide your own template
+--jobs #JOBS \
+--events #EVENTSperJOB \ 
+--energy ENERGYOFGUN \
+--pdg PDG \
+--queue CONDORQUEUE \
+--submit #to submit jobs, if not specified only dry run
 ```
 
-on lxplus. Note that the shell file sources a `SCEPCALenv.sh` file created by you to get the env variables to be able to use your local installation.
+In the `condor_submission` folder, it will create a folder named MYLABEL.
+In this folder, three subdirectories are created:
+- `config` contains the gaudi config created for each job from `runSCEPCalsimTemplate.py`;
+- `condor` contains the .out, .err, .log of the condor jobs.
+- `output` contains the .root produced.
 
-```
-cd install/test
-env | sed -e 's/^/export\ /' > SCEPCALenv.sh
-chmod +x SCEPCALenv.sh
-```
 
-This will write your current environment to file, appending the string "export " at the beginning of each line to make it sourceable. This should be run in the same login session as when you ran `init_lcg.sh`. Since all environment variables, including ones irrelevant to the simulation, are printed by `env`, it is recommended to read through the generated file and remove env variables that are unneeded.
