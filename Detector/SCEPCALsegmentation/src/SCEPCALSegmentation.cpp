@@ -50,16 +50,23 @@ namespace DDSegmentation {
           int copyNum = (int)cID;
 
           if (fPositionOf.count(copyNum) == 0) { //Add if not found
-            int system=(copyNum)&(32-1);
-            int nEta_in=(copyNum>>5)&(1024-1);
-            int nPhi_in=(copyNum>>15)&(1024-1);
-            int nDepth_in=(copyNum>>25)&(8-1);
+            //int system=(copyNum)&(32-1);
+            //int nEta_in=(copyNum>>5)&(1024-1);
+            //int nPhi_in=(copyNum>>15)&(1024-1);
+            //int nDepth_in=(copyNum>>25)&(8-1);
 
-            double EBz=2.0;
-            double Rin=1.5;
-            double nomfw=0.1;
-            double Fdz=0.05;
-            double Rdz=0.15;
+            int system=System(copyNum);
+            int nEta_in=Eta(copyNum);
+            int nPhi_in=Phi(copyNum);
+            int nDepth_in=Depth(copyNum);
+
+
+            // now in mm
+            double EBz=2250;
+            double Rin=2000;
+            double nomfw=100;
+            double Fdz=50;
+            double Rdz=150;
 
             int nThetaBarrel=floor(EBz/nomfw);
             int nThetaEndcap=floor(Rin/nomfw);
@@ -67,19 +74,37 @@ namespace DDSegmentation {
 
             double dTheta=(M_PI/2)/(nThetaBarrel+nThetaEndcap);
             double dPhi=2*M_PI/nPhi;
-
-            int nTheta=nEta_in>0 ? (nThetaBarrel+nThetaEndcap)-nEta_in : (nThetaBarrel+nThetaEndcap)-nEta_in;
+             
+            // nTheta always positive, so that thC is going from 0 to pi.
+            // [0,pi/2) --> z, eta positive ; (pi/2,pi] --> z,eta negative; pi/2 (cos(theta) = 0) is excluded
+            int nTheta = (nThetaBarrel+nThetaEndcap)-nEta_in;
             double thC=nTheta*dTheta;
+              
+            //phi should run form 0 to 2pi, so that x,y are both neg and positive.
             double phi=nPhi_in*dPhi;
 
-            double r0=EBz/cos(thC);
-            double r1=r0+Fdz;
-            double r2=r1+Rdz;
+            //double r0=EBz/cos(thC); // May be this is the case for the endcaps
+            // for EE fixed proj along EBz of r0, while for EB proj along transv plane is fixed:
+            double r0 = abs(nEta_in) > nThetaBarrel ? EBz/abs(cos(thC)) : Rin/abs(sin(thC));
 
-            double R=nDepth_in==1 ? (r0+r1)/2 : (r1+r2)/2;
+            //double r1=r0+Fdz;
+            //double r2=r1+Rdz;
+            double rF=r0+Fdz/2; // r is connecting the IP to center of crystal
+            double rR=rF+Rdz/2;
+
+
+            //double R=nDepth_in==1 ? (r0+r1)/2 : (r1+r2)/2;
+            double R=nDepth_in==1 ? rF : rR;
             double x=R*sin(thC)*cos(phi);
             double y=R*sin(thC)*sin(phi);
             double z=R*cos(thC);
+
+            //std::cout << "These are nEta_in :: " << nEta_in << " Phi_in ::" << nPhi_in << " Depth :: " << nDepth_in << std::endl;
+            //std::cout << "So these are nTheta :: " << nTheta << "and nPhi:: "<< nPhi_in << std::endl;
+            //std::cout << "rF :: " << rF << " rR:: " << rR << std::endl;
+            //std::cout << "... theta :: " << thC <<  "and  R :: " << R <<  "... finally cos(theta),sin(theta) :: " << cos(thC) << "," << sin(thC) << std::endl;
+            //std::cout << "... phi   :: " << phi <<  "and  R :: " << R <<  "... finally cos(phi),sin(phi) :: " << cos(phi) << "," <<  sin(phi) << std::endl;
+            //std::cout << "to get  z=R*cos(theta)= " << z << " and y=R*sin(theta)*sin(phi)= " << y <<  " and x=R*sin(theta)*cos(phi)= " << x << std::endl;
 
             Vector3D position(x, y, z);
             fPositionOf.emplace(copyNum,position);
@@ -120,6 +145,13 @@ namespace DDSegmentation {
             VolumeID PhiId = static_cast<VolumeID>(Phi);
             VolumeID DepthId = static_cast<VolumeID>(Depth);
             VolumeID vID = 0;
+
+            //std::cout << " In setVolumeID:: " << std::endl;
+            //std::cout << " EtaID:: " << EtaId <<std::endl;
+            //std::cout << " PhiID:: " << PhiId <<std::endl;
+            //std::cout << " DepthID:: " << DepthId <<std::endl;
+
+
             _decoder->set(vID, fSystemId, SystemId);
             _decoder->set(vID, fEtaId, EtaId);
             _decoder->set(vID, fPhiId, PhiId);
@@ -132,11 +164,19 @@ namespace DDSegmentation {
         }
 
         CellID SCEPCALSegmentation::setCellID(int System, int Eta, int Phi, int Depth) const {
-          VolumeID SystemId = static_cast<VolumeID>(System);
-          VolumeID EtaId = static_cast<VolumeID>(Eta);
+            VolumeID SystemId = static_cast<VolumeID>(System);
+            VolumeID EtaId = static_cast<VolumeID>(Eta);
             VolumeID PhiId = static_cast<VolumeID>(Phi);
             VolumeID DepthId = static_cast<VolumeID>(Depth);
             VolumeID vID = 0;
+
+            //std::cout << " In setCellID:: " << std::endl;
+            //std::cout << " EtaID:: " << EtaId <<std::endl;
+            //std::cout << " PhiID:: " << PhiId <<std::endl;
+            //std::cout << " DepthID:: " << DepthId <<std::endl;
+
+
+
             _decoder->set(vID, fSystemId, SystemId);
             _decoder->set(vID, fEtaId, EtaId);
             _decoder->set(vID, fPhiId, PhiId);

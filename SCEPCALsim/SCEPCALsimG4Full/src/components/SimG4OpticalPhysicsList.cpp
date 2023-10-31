@@ -36,7 +36,7 @@ G4VModularPhysicsList* SimG4OpticalPhysicsList::physicsList() {
   auto* opticalParams = G4OpticalParameters::Instance();
   opticalParams->SetBoundaryInvokeSD(true);
   opticalParams->SetProcessActivation("Cerenkov",true);
-  opticalParams->SetProcessActivation("Scintillation",true);
+  opticalParams->SetProcessActivation("Scintillation",false);
   opticalParams->SetCerenkovTrackSecondariesFirst(true);
   opticalParams->SetScintTrackSecondariesFirst(true);
 

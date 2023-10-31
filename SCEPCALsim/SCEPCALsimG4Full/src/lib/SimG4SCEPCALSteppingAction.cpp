@@ -183,12 +183,17 @@ void SimG4SCEPCALSteppingAction::accumulate(unsigned int                    &pre
 
     auto pos = pSeg->myPosition(copyNum64);
 
-    if (fDebugLevel<6) {
+    if (fDebugLevel<2) {
       std::cout << "        Accumulate Position: x: "<<pos.x()*CLHEP::millimeter
                 << " y: "<<pos.y()*CLHEP::millimeter
                 << " z: "<<pos.z()*CLHEP::millimeter
                 << std::endl;
     }
+
+    //simEdep.setPosition( { static_cast<float>(pos.x()/CLHEP::centimeter*CLHEP::millimeter),
+    //                       static_cast<float>(pos.y()/CLHEP::centimeter*CLHEP::millimeter),
+    //                       static_cast<float>(pos.z()/CLHEP::centimeter*CLHEP::millimeter) } );
+
 
     simEdep.setPosition( { static_cast<float>(pos.x()*CLHEP::millimeter),
                            static_cast<float>(pos.y()*CLHEP::millimeter),

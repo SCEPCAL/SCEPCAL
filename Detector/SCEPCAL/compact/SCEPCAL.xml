@@ -28,7 +28,7 @@
     <readout name="SCEPCALreadout">
       <segmentation type="SCEPCALSegmentation"/>
       <!-- Mendatory to use the first 32 bits for tower infos & the last 32 bits for fiber/SiPM infos -->
-      <id>system:5,eta:-10,phi:10,depth:3,sipm:3,c:1,module:3</id>
+      <id>system:5,eta:-10,phi:12,depth:3,sipm:3,c:1,module:3</id>
     </readout>
   </readouts>
 
