@@ -151,7 +151,6 @@ void SimG4SCEPCALSteppingAction::accumulate(unsigned int                    &pre
 
   // search for the element
   bool found = false;
-  //edm4hep::SimCalorimeterHit* thePtr = nullptr;
   edm4hep::MutableSimCalorimeterHit* thePtr = nullptr;
 
   if ( m_Edeps->size() > prev ) { // check previous element
@@ -217,7 +216,6 @@ void SimG4SCEPCALSteppingAction::accumulateCherenkov(unsigned int               
 
   // search for the element
   bool found = false;
-  //edm4hep::SimCalorimeterHit* thePtr = nullptr;
   edm4hep::MutableSimCalorimeterHit* thePtr = nullptr;
 
   if ( m_EdepsCherenkov->size() > prev ) { // check previous element
