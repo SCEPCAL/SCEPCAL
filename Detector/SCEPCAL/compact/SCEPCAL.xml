@@ -911,12 +911,11 @@
       <property name="ABSLENGTH" ref="AbsLen_PbWO"/>
       <property name="SCINTILLATIONCOMPONENT1" ref="scintFast_PbWO"/>
       <property name="ELECTRONSCINTILLATIONYIELD" ref="electronScintYield_PbWO"/>
-      <constant name="SCINTILLATIONYIELD" value="450/MeV"/> <!-- for 10% of detected cherenkov in PMTs, 1/MeV for debugging -->
-      <constant name="SCINTILLATIONTIMECONSTANT1" value="5.0*ns"/>
-      <constant name="SCINTILLATIONTIMECONSTANT2" value="15.0*ns"/>
+      <constant name="SCINTILLATIONYIELD" value="100/MeV"/> <!-- for 10% of detected cherenkov in PMTs, 1/MeV for debugging -->
+      <constant name="SCINTILLATIONTIMECONSTANT1" value="10*ns"/>
       <constant name="RESOLUTIONSCALE" value="1."/>  <!-- 3.2 default value-->
-      <constant name="SCINTILLATIONYIELD1" value="0.3"/>
-      <constant name="SCINTILLATIONRISETIME1" value="0.01*ns"/> <!-- careful on rise time -->
+      <constant name="SCINTILLATIONYIELD1" value="1."/>
+      <constant name="SCINTILLATIONRISETIME1" value="0.2*ns"/> <!-- careful on rise time -->
 
     </material>
 
