@@ -6,7 +6,7 @@ Repository for Gaudi simulation &amp; analysis of the DR Segmented Crystal ECAL.
 After fetching the repository, do
 
 ```sh
-source init_lcg.sh # init_hsf.sh for /cvmfs/sw.hsf.org/key4hep
+source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path_to_install_directory> ..
@@ -104,5 +104,4 @@ In this folder, three subdirectories are created:
 - `config` contains the gaudi config created for each job from `runSCEPCalsimTemplate.py`;
 - `condor` contains the .out, .err, .log of the condor jobs.
 - `output` contains the .root produced.
-
 

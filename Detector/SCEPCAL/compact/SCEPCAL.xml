@@ -909,14 +909,13 @@
       <composite n="4" ref="O"/>
       <property name="RINDEX" ref="RI_PbWO"/>
       <property name="ABSLENGTH" ref="AbsLen_PbWO"/>
-      <property name="FASTCOMPONENT" ref="scintFast_PbWO"/>
+      <property name="SCINTILLATIONCOMPONENT1" ref="scintFast_PbWO"/>
       <property name="ELECTRONSCINTILLATIONYIELD" ref="electronScintYield_PbWO"/>
-      <constant name="SCINTILLATIONYIELD" value="450/MeV"/> <!-- for 10% of detected cherenkov in PMTs, 1/MeV for debugging -->
-      <constant name="FASTTIMECONSTANT" value="5.0*ns"/>
-      <constant name="SLOWTIMECONSTANT" value="15.0*ns"/>
+      <constant name="SCINTILLATIONYIELD" value="100/MeV"/> <!-- for 10% of detected cherenkov in PMTs, 1/MeV for debugging -->
+      <constant name="SCINTILLATIONTIMECONSTANT1" value="10*ns"/>
       <constant name="RESOLUTIONSCALE" value="1."/>  <!-- 3.2 default value-->
-      <constant name="YIELDRATIO" value="0.3"/>
-      <constant name="FASTSCINTILLATIONRISETIME" value="0.01*ns"/> <!-- careful on rise time -->
+      <constant name="SCINTILLATIONYIELD1" value="1."/>
+      <constant name="SCINTILLATIONRISETIME1" value="0.2*ns"/> <!-- careful on rise time -->
 
     </material>
 
@@ -927,12 +926,12 @@
       <composite n="5" ref="O"/>
       <property name="RINDEX" ref="RI_LYSO"/> <!-- Comment RINDEX to avoid cherenkov generation in timing layers -->
       <property name="ABSLENGTH" ref="AbsLen_LYSO"/>
-      <property name="FASTCOMPONENT" ref="scintFast_LYSO"/>
+      <property name="SCINTILLATIONCOMPONENT1" ref="scintFast_LYSO"/>
       <constant name="SCINTILLATIONYIELD" value="40000/MeV"/>
-      <constant name="FASTTIMECONSTANT" value="40.*ns"/>
+      <constant name="SCINTILLATIONTIMECONSTANT1" value="40.*ns"/>
       <constant name="RESOLUTIONSCALE" value="3.4"/>
-      <constant name="YIELDRATIO" value="1.0"/>
-      <constant name="FASTSCINTILLATIONRISETIME" value="0.1*ns"/>
+      <constant name="SCINTILLATIONYIELD1" value="1.0"/>
+      <constant name="SCINTILLATIONRISETIME1" value="0.1*ns"/>
     </material>
 
   </materials>
@@ -952,7 +951,7 @@
 
       <sensitive type="SCEPCALSiPMSD"/>
 
-      <dim    barrelHalfZ="2.25*m" barrelInnerR="2*m" crystalFaceWidthNominal="10*mm"/>
+      <dim    barrelHalfZ="2.25*m" barrelInnerR="2*m" crystalFaceWidthNominal="30*mm"/>
 
       <crystalF       length="50*mm"      material="PbWO"          vis="crystalFVis"/>
       <crystalR       length="150*mm"     material="PbWO"          vis="crystalRVis"/>

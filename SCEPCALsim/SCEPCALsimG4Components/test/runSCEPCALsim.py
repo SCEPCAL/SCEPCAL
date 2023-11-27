@@ -7,9 +7,9 @@ dataservice = k4DataSvc("EventDataSvc")
 
 from Configurables import GenAlg, MomentumRangeParticleGun
 pgun = MomentumRangeParticleGun("PGun",
-  PdgCodes=[111], # electron
-  MomentumMin = 20.*units.GeV, # GeV
-  MomentumMax = 20.*units.GeV, # GeV
+  PdgCodes=[11], # electron
+  MomentumMin = 3.*units.GeV, # GeV
+  MomentumMax = 3.*units.GeV, # GeV
   ThetaMin = 0.1, # rad
   ThetaMax = 3.1, # rad
   PhiMin = 0.0, # rad
@@ -34,13 +34,13 @@ from Configurables import GeoSvc
 geoservice = GeoSvc(
   "GeoSvc",
   detectors = [
-    'file:/afs/cern.ch/user/w/wochung/private/CalVision/SCEPCAL/install/share/compact/SCEPCAL.xml'
+    'file:/afs/cern.ch/work/f/fcetorel/private/work2/scepcal_key4hep/install/share/compact/SCEPCAL.xml'
   ]
 )
 
 from Configurables import SimG4Svc, SimG4OpticalPhysicsList
 
-opticalPhysicsTool = SimG4OpticalPhysicsList("opticalPhysics", fullphysics="SimG4FtfpBert")
+opticalPhysicsTool = SimG4OpticalPhysicsList("opticalPhysics", fullphysics="SimG4FtfpBert", SetScintillation=False)
 
 from Configurables import SimG4SCEPCALActions
 actionTool = SimG4SCEPCALActions("SimG4SCEPCALActions")
@@ -86,7 +86,7 @@ rndmGenSvc = RndmGenSvc("RndmGenSvc",
 ApplicationMgr(
   TopAlg = [gen, hepmc2edm, geantsim, podiooutput],
   EvtSel = 'NONE',
-  EvtMax = 10,
+  EvtMax = 100,
   # order is important, as GeoSvc is needed by SimG4Svc
   ExtSvc = [rndmEngine, rndmGenSvc, dataservice, geoservice, geantservice]
 )

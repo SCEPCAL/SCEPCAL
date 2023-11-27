@@ -64,7 +64,7 @@ namespace DDSegmentation {
             // now in mm
             double EBz=2250;
             double Rin=2000;
-            double nomfw=100;
+            double nomfw=30;
             double Fdz=50;
             double Rdz=150;
 
