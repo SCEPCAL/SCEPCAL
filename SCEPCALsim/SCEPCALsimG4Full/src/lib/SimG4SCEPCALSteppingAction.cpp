@@ -31,10 +31,10 @@ void SimG4SCEPCALSteppingAction::UserSteppingAction(const G4Step* step) {
   G4StepPoint*          postStepPoint     = step->GetPostStepPoint();
   G4ParticleDefinition* particle          = track->GetDefinition();
 
-  if (preStepTouchable->GetHistoryDepth()<2) {
+  if (preStepTouchable->GetHistoryDepth()<1) {
     //historyDepth    world
     //historyDepth-1  experimentalhall (detector)
-    //historyDepth-2  towerAssemblyVol, assemblyEnvelopVol
+    //historyDepth-2  scepcalAssemblyVol, assemblyEnvelopVol
 
     if (fDebugLevel<3) std::cout<<"UserSteppingAction: Skipping step, particle outside volume"<<std::endl;
     return; // skip particles in the world or assembly volume
