@@ -76,50 +76,80 @@ namespace ddSCEPCAL {
       dd4hep::Volume scepcalAssemblyVol("scepcalAssemblyVol", scepcalAssemblyShape, theDetector.material("Vacuum"));
       scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
 
-      // Make crystals along theta (eta) and make rotations in phi each step (i.e. phi nested in theta)
-      for (int iTheta=0; iTheta<2*nThetaBarrel+1; iTheta++) {
-        if (iTheta == nThetaBarrel) continue;
-        double thC =thetaSizeEndcap+(iTheta*dThetaBarrel);
+      // Make one theta slice then rotate in phi (i.e. theta nested in phi)
 
-        // Projective trapezoids using EightPointSolids. see: https://root.cern.ch/doc/master/classTGeoArb8.html
+      for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
 
-        double r0 =Rin/sin(thC);
-        double r1 =r0+Fdz;
-        double r2 =r1+Rdz;
+        // Make assembly slice
+        double r0slice =Rin/sin(thetaSizeEndcap);
+        double y0slice =r0slice*tan(dThetaBarrel/2.);
 
-        double y0 =r0*tan(dThetaBarrel/2.);
-        double y1 =r1*tan(dThetaBarrel/2.);
-        double y2 =r2*tan(dThetaBarrel/2.);
+        double z1slice =Rin -y0slice*sin(M_PI/2-thetaSizeEndcap);
+        double z2slice =Rin +Fdz +Rdz;
 
-        double x0y0 = (r0*cos(thC) +y0*sin(thC)) *tan(thC -dThetaBarrel/2.) *tan(dPhiBarrel/2.);
-        double x1y0 = (r0*cos(thC) -y0*sin(thC)) *tan(thC +dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+        double x1slice =z1slice*tan(M_PI/2-thetaSizeEndcap);
+        double x2slice =z2slice*tan(M_PI/2-thetaSizeEndcap);
 
-        double x0y1 = (r1*cos(thC) +y1*sin(thC)) *tan(thC -dThetaBarrel/2.) *tan(dPhiBarrel/2.);
-        double x1y1 = (r1*cos(thC) -y1*sin(thC)) *tan(thC +dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+        double y1slice =z1slice*tan(dPhiBarrel/2);
+        double y2slice =z2slice*tan(dPhiBarrel/2);
 
-        double x0y2 = (r2*cos(thC) +y2*sin(thC)) *tan(thC -dThetaBarrel/2.) *tan(dPhiBarrel/2.);
-        double x1y2 = (r2*cos(thC) -y2*sin(thC)) *tan(thC +dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+        double verticesS[]={x1slice,y1slice,x1slice,-y1slice,-x1slice,-y1slice,-x1slice,y1slice,
+                            x2slice,y2slice,x2slice,-y2slice,-x2slice,-y2slice,-x2slice,y2slice};
 
-        // Front (F) and Rear (R) crystal shapes
+        dd4hep::EightPointSolid barrelSliceAssemblyShape((z2slice-z1slice)/2,verticesS);
+        dd4hep::Volume barrelSliceAssemblyVolume("BarrelSliceAssembly", barrelSliceAssemblyShape, theDetector.material("Vacuum"));
 
-        double verticesF[]={x0y0,y0,x1y0,-y0,-x1y0,-y0,-x0y0,y0,
-                            x0y1,y1,x1y1,-y1,-x1y1,-y1,-x0y1,y1};
+        double phi=iPhi*dPhiBarrel;
+        RotationZYX rotSlice(M_PI/2, M_PI/2, 0);
+        ROOT::Math::RotationZ rotZSlice = ROOT::Math::RotationZ(phi);
+        rotSlice = rotZSlice*rotSlice;
 
-        double verticesR[]={x0y1,y1,x1y1,-y1,-x1y1,-y1,-x0y1,y1,
-                            x0y2,y2,x1y2,-y2,-x1y2,-y2,-x0y2,y2};
+        double rSlice =(z1slice+z2slice)/2;
+        Position dispSlice(rSlice*cos(phi),rSlice*sin(phi),0);
 
-        dd4hep::EightPointSolid crystalFShape(Fdz/2, verticesF);
-        dd4hep::EightPointSolid crystalRShape(Rdz/2, verticesR);
+        scepcalAssemblyVol.placeVolume( barrelSliceAssemblyVolume, Transform3D(rotSlice, dispSlice) );
 
-        // Promote shapes to volumes and set attributes
-        dd4hep::Volume crystalFVol("BarrelCrystalR", crystalFShape, crystalFMat);
-        dd4hep::Volume crystalRVol("BarrelCrystalF", crystalRShape, crystalRMat);
 
-        crystalFVol.setVisAttributes(theDetector, crystalFXML.visStr());
-        crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
+        for (int iTheta=0; iTheta<2*nThetaBarrel+1; iTheta++) {
+          if (iTheta == nThetaBarrel) continue;
+          double thC =thetaSizeEndcap+(iTheta*dThetaBarrel);
 
-        // Rotations in phi to place volumes
-        for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
+          // Projective trapezoids using EightPointSolids. see: https://root.cern.ch/doc/master/classTGeoArb8.html
+
+          double r0 =Rin/sin(thC);
+          double r1 =r0+Fdz;
+          double r2 =r1+Rdz;
+
+          double y0 =r0*tan(dThetaBarrel/2.);
+          double y1 =r1*tan(dThetaBarrel/2.);
+          double y2 =r2*tan(dThetaBarrel/2.);
+
+          double x0y0 = (r0*cos(thC) +y0*sin(thC)) *tan(thC -dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+          double x1y0 = (r0*cos(thC) -y0*sin(thC)) *tan(thC +dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+
+          double x0y1 = (r1*cos(thC) +y1*sin(thC)) *tan(thC -dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+          double x1y1 = (r1*cos(thC) -y1*sin(thC)) *tan(thC +dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+
+          double x0y2 = (r2*cos(thC) +y2*sin(thC)) *tan(thC -dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+          double x1y2 = (r2*cos(thC) -y2*sin(thC)) *tan(thC +dThetaBarrel/2.) *tan(dPhiBarrel/2.);
+
+          // Front (F) and Rear (R) crystal shapes
+
+          double verticesF[]={x0y0,y0,x1y0,-y0,-x1y0,-y0,-x0y0,y0,
+                              x0y1,y1,x1y1,-y1,-x1y1,-y1,-x0y1,y1};
+
+          double verticesR[]={x0y1,y1,x1y1,-y1,-x1y1,-y1,-x0y1,y1,
+                              x0y2,y2,x1y2,-y2,-x1y2,-y2,-x0y2,y2};
+
+          dd4hep::EightPointSolid crystalFShape(Fdz/2, verticesF);
+          dd4hep::EightPointSolid crystalRShape(Rdz/2, verticesR);
+
+          // Promote shapes to volumes and set attributes
+          dd4hep::Volume crystalFVol("BarrelCrystalR", crystalFShape, crystalFMat);
+          dd4hep::Volume crystalRVol("BarrelCrystalF", crystalRShape, crystalRMat);
+
+          crystalFVol.setVisAttributes(theDetector, crystalFXML.visStr());
+          crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
 
           auto crystalFId64=segmentation->setVolumeID(1, (nThetaBarrel-iTheta) , iPhi, 1);
           auto crystalRId64=segmentation->setVolumeID(1, (nThetaBarrel-iTheta) , iPhi, 2);
@@ -144,8 +174,8 @@ namespace ddSCEPCAL {
                         rR*cos(thC));
 
           // Place volumes and ID them
-          dd4hep::PlacedVolume crystalFp = scepcalAssemblyVol.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF) );
-          dd4hep::PlacedVolume crystalRp = scepcalAssemblyVol.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR) );
+          dd4hep::PlacedVolume crystalFp = barrelSliceAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispSlice) );
+          dd4hep::PlacedVolume crystalRp = barrelSliceAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispSlice) );
 
           crystalFp.addPhysVolID("eta", nThetaBarrel-iTheta);
           crystalFp.addPhysVolID("phi", iPhi);
@@ -204,10 +234,39 @@ namespace ddSCEPCAL {
         // Skip crystals at low theta (near the beampipe) if the crystal face aspect ratio is outside 15% of unity
         double centralHalfWidthActual = RinEndcap*sin(dPhiEndcap/2);
         //std::cout << "For theta " << nThetaBarrel+nThetaEndcap-iTheta <<  ", crystal face aspect ratio " << abs(1-y0/centralHalfWidthActual) << std::endl;
-        if (abs(1-y0/centralHalfWidthActual)>0.14) { // changed to 14, since aspect ratio of first tower (42/-42) is 14.9
+        // changed to 14, since aspect ratio of first tower (42/-42) is 14.9
+        if (abs(1-y0/centralHalfWidthActual)>0.14) {
           //std::cout << " More than 14% --> SKIPPING ... " << std::endl;
-          continue;}
+          continue;
+        }
 
+        // Make assembly cone
+        double z1 = r0*cos(thC) -y0*cos(thC);
+        double z2 = r2*cos(thC) +y2*cos(M_PI/2-thC);
+        double zcone = (z2-z1)/2;
+
+        double r1max = r0*sin(thC) +y0*sin(thC);
+        double r1min = r1max - 2*y0/cos(M_PI/2-thC);
+
+        double r2min = r2*sin(thC) -y2*sin(M_PI/2-thC);
+        double r2max = r2min + 2*y2/cos(thC);
+
+        dd4hep::Cone phiRingAssemblyShape(zcone, rmin1, rmax1, rmin2, rmax2);
+
+        dd4hep::Volume phiRingAssemblyVolume("EndcapRingAssembly", phiRingAssemblyShape, theDetector.material("Vacuum"));
+        dd4hep::Volume phiRingAssemblyVolume1("EndcapRingAssembly1", phiRingAssemblyShape, theDetector.material("Vacuum"));
+
+        phiRingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+        phiRingAssemblyVolume1.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+
+        Position dispCone(0,0,z1+zcone);
+        Position dispCone1(0,0,-(z1+zcone));
+        RotationZYX rotMirror(0, 0, M_PI);
+
+        scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume, dispCone );
+        scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
+
+        // Make crystal shapes
         double x0y0 = (r0*cos(thC) +y0*sin(thC)) *tan(thC -dThetaEndcap/2.) *tan(dPhiEndcap/2.);
         double x1y0 = (r0*cos(thC) -y0*sin(thC)) *tan(thC +dThetaEndcap/2.) *tan(dPhiEndcap/2.);
 
@@ -273,11 +332,11 @@ namespace ddSCEPCAL {
                         rR*sin(thC)*sin(phi),
                         -rR*cos(thC));
 
-          dd4hep::PlacedVolume crystalFp = scepcalAssemblyVol.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF) );
-          dd4hep::PlacedVolume crystalRp = scepcalAssemblyVol.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR) );
+          dd4hep::PlacedVolume crystalFp = phiRingAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispCone) );
+          dd4hep::PlacedVolume crystalRp = phiRingAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispCone) );
 
-          dd4hep::PlacedVolume crystalFp1 = scepcalAssemblyVol.placeVolume( crystalFVol, crystalFId321, Transform3D(rot1,dispF1) );
-          dd4hep::PlacedVolume crystalRp1 = scepcalAssemblyVol.placeVolume( crystalRVol, crystalRId321, Transform3D(rot1,dispR1) );
+          dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot1,dispF1-dispCone1) );
+          dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot1,dispR1-dispCone1) );
 
           crystalFp.addPhysVolID("eta", (nThetaBarrel+nThetaEndcap-iTheta));
           crystalFp.addPhysVolID("phi", iPhi);
