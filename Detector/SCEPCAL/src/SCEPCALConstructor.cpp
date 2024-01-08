@@ -157,8 +157,7 @@ namespace ddSCEPCAL {
           int crystalFId32=segmentation->getFirst32bits(crystalFId64);
           int crystalRId32=segmentation->getFirst32bits(crystalRId64);
 
-          // Use the ROOT rotation class here because Euler rotations are not implemented in dd4hep
-          double phi=iPhi*dPhiBarrel;
+          // Use the ROOT rotation class here because Euler rotations are not implemented in dd4hep          
           RotationZYX rot(M_PI/2, thC, 0);
           ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
           rot = rotZ*rot;
@@ -251,7 +250,7 @@ namespace ddSCEPCAL {
         double r2min = r2*sin(thC) -y2*sin(M_PI/2-thC);
         double r2max = r2min + 2*y2/cos(thC);
 
-        dd4hep::Cone phiRingAssemblyShape(zcone, rmin1, rmax1, rmin2, rmax2);
+        dd4hep::Cone phiRingAssemblyShape(zcone, r1min, r1max, r2min, r2max);
 
         dd4hep::Volume phiRingAssemblyVolume("EndcapRingAssembly", phiRingAssemblyShape, theDetector.material("Vacuum"));
         dd4hep::Volume phiRingAssemblyVolume1("EndcapRingAssembly1", phiRingAssemblyShape, theDetector.material("Vacuum"));
@@ -304,8 +303,8 @@ namespace ddSCEPCAL {
           int crystalFId321=segmentation->getFirst32bits(crystalFId641);
           int crystalRId321=segmentation->getFirst32bits(crystalRId641);
 
-          ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
           double phi=iPhi*dPhiEndcap;
+           ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
 
           RotationZYX rot(M_PI/2, thC, 0);
           rot = rotZ*rot;
