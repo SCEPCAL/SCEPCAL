@@ -37,6 +37,7 @@ namespace ddSCEPCAL {
       xml_comp_t timingXML=detectorXML.child(_Unicode(timingLayer));
       xml_comp_t instXML=detectorXML.child(_Unicode(inst));
       xml_comp_t scepcalAssemblyXML=detectorXML.child(_Unicode(scepcalAssembly));
+      xml_comp_t printDebugXML=detectorXML.child(_Unicode(printDebug));
 
       //-----------------------------------------------------------------------------------
 
@@ -46,6 +47,8 @@ namespace ddSCEPCAL {
       auto segmentation=dynamic_cast<dd4hep::DDSegmentation::SCEPCALSegmentation *>( sensDet.readout().segmentation().segmentation());
 
       dd4hep::Assembly experimentalHall("hall");
+
+      const int  debugLevel = printDebugXML.attr<bool>(_Unicode(level));
 
       // Parse input parameters from imported xml objects
       const double Fdz    =crystalFXML.attr<double>(_Unicode(length));
@@ -80,6 +83,8 @@ namespace ddSCEPCAL {
 
       for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
 
+        if (debugLevel>0) std::cout << "Barrel: phi: " << iPhi << std::endl;
+
         // Make assembly slice
         double r0slice =Rin/sin(thetaSizeEndcap);
         double y0slice =r0slice*tan(dThetaBarrel/2.);
@@ -111,6 +116,9 @@ namespace ddSCEPCAL {
 
 
         for (int iTheta=0; iTheta<2*nThetaBarrel+1; iTheta++) {
+
+          if (debugLevel>0) std::cout << "  Barrel: theta: " << iTheta << std::endl;
+
           if (iTheta == nThetaBarrel) continue;
           double thC =thetaSizeEndcap+(iTheta*dThetaBarrel);
 
@@ -215,6 +223,8 @@ namespace ddSCEPCAL {
       // Endcap
       for (int iTheta=1; iTheta<nThetaEndcap; iTheta++) {
 
+        if (debugLevel>0) std::cout << "Endcap: theta: " << iTheta << std::endl;
+
         double thC        =iTheta*dThetaEndcap;
         double RinEndcap  = EBz*tan(thC);
 
@@ -291,6 +301,7 @@ namespace ddSCEPCAL {
         crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
 
         for (int iPhi=0; iPhi<nPhiEndcap; iPhi++) {
+          if (debugLevel>0) std::cout << "  Endcap: phi: " << iPhi << std::endl;
 
           //Add suffix 1 for the other endcap (mirrored)
           auto crystalFId64=segmentation->setVolumeID(1,(nThetaBarrel+nThetaEndcap-iTheta), iPhi, 1);

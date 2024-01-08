@@ -960,6 +960,8 @@
 
       <scepcalAssembly vis="scepcalAssemblyVis"/>
 
+      <printDebug level="9"/>
+
     </detector>
 
   </detectors>
