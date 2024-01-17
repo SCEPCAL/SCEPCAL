@@ -36,7 +36,9 @@ namespace ddSCEPCAL {
       xml_comp_t crystalRXML=detectorXML.child(_Unicode(crystalR));
       xml_comp_t timingXML=detectorXML.child(_Unicode(timingLayer));
       xml_comp_t instXML=detectorXML.child(_Unicode(inst));
+      xml_comp_t scepcalAssemblyGlobalVisXML=detectorXML.child(_Unicode(scepcalAssemblyGlobalVis));
       xml_comp_t scepcalAssemblyXML=detectorXML.child(_Unicode(scepcalAssembly));
+
       xml_comp_t printDebugXML=detectorXML.child(_Unicode(printDebug));
 
       //-----------------------------------------------------------------------------------
@@ -77,35 +79,44 @@ namespace ddSCEPCAL {
 
       dd4hep::Box scepcalAssemblyShape(Rin+2*Fdz+2*Rdz, Rin+2*Fdz+2*Rdz, 2*EBz+2*Fdz+2*Rdz);
       dd4hep::Volume scepcalAssemblyVol("scepcalAssemblyVol", scepcalAssemblyShape, theDetector.material("Vacuum"));
-      scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+      scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyGlobalVisXML.visStr());
 
       // Make one theta slice then rotate in phi (i.e. theta nested in phi)
 
       for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
 
-        if (debugLevel>0) std::cout << "Barrel: phi: " << iPhi << std::endl;
+        if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
 
         // Make assembly slice
-        double r0slice =Rin/sin(thetaSizeEndcap);
-        double y0slice =r0slice*tan(dThetaBarrel/2.);
+        double r0slice_end =Rin/sin(thetaSizeEndcap);
+        double y0slice_end =r0slice_end*tan(dThetaBarrel/2.);
 
-        double z1slice =Rin -y0slice*sin(M_PI/2-thetaSizeEndcap);
+        double slice_front_jut = y0slice_end*sin(M_PI/2-thetaSizeEndcap);
+
+        double z1slice =Rin -slice_front_jut;
         double z2slice =Rin +Fdz +Rdz;
 
-        double x1slice =z1slice*tan(M_PI/2-thetaSizeEndcap);
-        double x2slice =z2slice*tan(M_PI/2-thetaSizeEndcap);
+        double zheight_slice = (z2slice-z1slice)/2;
 
-        double y1slice =z1slice*tan(dPhiBarrel/2);
-        double y2slice =z2slice*tan(dPhiBarrel/2);
+        double y1slice =z1slice*tan(M_PI/2-(thetaSizeEndcap-dThetaBarrel/2));
+        double y2slice =z2slice*tan(M_PI/2-(thetaSizeEndcap-dThetaBarrel/2));
 
-        double verticesS[]={x1slice,y1slice,x1slice,-y1slice,-x1slice,-y1slice,-x1slice,y1slice,
-                            x2slice,y2slice,x2slice,-y2slice,-x2slice,-y2slice,-x2slice,y2slice};
+        double x1slice =z1slice*tan(dPhiBarrel/2);
+        double x2slice =z2slice*tan(dPhiBarrel/2);
 
-        dd4hep::EightPointSolid barrelSliceAssemblyShape((z2slice-z1slice)/2,verticesS);
+        double verticesS[]={y1slice,x1slice,y1slice,-x1slice,-y1slice,-x1slice,-y1slice,x1slice,
+                            y2slice,x2slice,y2slice,-x2slice,-y2slice,-x2slice,-y2slice,x2slice};
+        
+        // double verticesS[]={x1slice,y1slice,x1slice,-y1slice,-x1slice,-y1slice,-x1slice,y1slice,
+                            // x2slice,y2slice,x2slice,-y2slice,-x2slice,-y2slice,-x2slice,y2slice};
+        
+        dd4hep::EightPointSolid barrelSliceAssemblyShape(zheight_slice,verticesS);
         dd4hep::Volume barrelSliceAssemblyVolume("BarrelSliceAssembly", barrelSliceAssemblyShape, theDetector.material("Vacuum"));
 
+        barrelSliceAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+
         double phi=iPhi*dPhiBarrel;
-        RotationZYX rotSlice(M_PI/2, M_PI/2, 0);
+        RotationZYX rotSlice(0, M_PI/2, 0);
         ROOT::Math::RotationZ rotZSlice = ROOT::Math::RotationZ(phi);
         rotSlice = rotZSlice*rotSlice;
 
@@ -114,10 +125,9 @@ namespace ddSCEPCAL {
 
         scepcalAssemblyVol.placeVolume( barrelSliceAssemblyVolume, Transform3D(rotSlice, dispSlice) );
 
-
         for (int iTheta=0; iTheta<2*nThetaBarrel+1; iTheta++) {
 
-          if (debugLevel>0) std::cout << "  Barrel: theta: " << iTheta << std::endl;
+          if (debugLevel>1) std::cout << "  Barrel: theta: " << iTheta << std::endl;
 
           if (iTheta == nThetaBarrel) continue;
           double thC =thetaSizeEndcap+(iTheta*dThetaBarrel);
@@ -143,6 +153,12 @@ namespace ddSCEPCAL {
 
           // Front (F) and Rear (R) crystal shapes
 
+          // double verticesF[]={y0,x0y0, -y0,x1y0, -y0,-x1y0, y0,-x0y0,
+                              // y1,x0y1, -y1,x1y1, -y1,-x1y1, y1,-x0y1};
+
+          // double verticesR[]={y1,x0y1, -y1,x1y1, -y1,-x1y1, y1,-x0y1,
+                              // y2,x0y2, -y2,x1y2, -y2,-x1y2, y2,-x0y2};
+
           double verticesF[]={x0y0,y0,x1y0,-y0,-x1y0,-y0,-x0y0,y0,
                               x0y1,y1,x1y1,-y1,-x1y1,-y1,-x0y1,y1};
 
@@ -166,23 +182,26 @@ namespace ddSCEPCAL {
           int crystalRId32=segmentation->getFirst32bits(crystalRId64);
 
           // Use the ROOT rotation class here because Euler rotations are not implemented in dd4hep          
-          RotationZYX rot(M_PI/2, thC, 0);
-          ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
-          rot = rotZ*rot;
+          RotationZYX rot(M_PI/2, -M_PI/2 +thC, 0);
+          // ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
+          // rot = rotZ*rot;
 
           double rF=r0+Fdz/2.;
-          Position dispF(rF*sin(thC)*cos(phi),
-                        rF*sin(thC)*sin(phi),
-                        rF*cos(thC));
+          Position dispF(-rF*cos(thC),
+                        0, //rF*sin(thC)*sin(phi),
+                        -(rSlice-rF*sin(thC))
+
+                        );
 
           double rR=r1+Rdz/2.;
-          Position dispR(rR*sin(thC)*cos(phi),
-                        rR*sin(thC)*sin(phi),
-                        rR*cos(thC));
+          Position dispR(-rR*cos(thC),
+                        0, //rR*sin(thC)*sin(phi),
+                        -(rSlice-rR*sin(thC))
+                        );
 
           // Place volumes and ID them
-          dd4hep::PlacedVolume crystalFp = barrelSliceAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispSlice) );
-          dd4hep::PlacedVolume crystalRp = barrelSliceAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispSlice) );
+          dd4hep::PlacedVolume crystalFp = barrelSliceAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF) );
+          dd4hep::PlacedVolume crystalRp = barrelSliceAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR) );
 
           crystalFp.addPhysVolID("eta", nThetaBarrel-iTheta);
           crystalFp.addPhysVolID("phi", iPhi);
@@ -223,7 +242,7 @@ namespace ddSCEPCAL {
       // Endcap
       for (int iTheta=1; iTheta<nThetaEndcap; iTheta++) {
 
-        if (debugLevel>0) std::cout << "Endcap: theta: " << iTheta << std::endl;
+        if (debugLevel>1) std::cout << "Endcap: theta: " << iTheta << std::endl;
 
         double thC        =iTheta*dThetaEndcap;
         double RinEndcap  = EBz*tan(thC);
@@ -301,7 +320,7 @@ namespace ddSCEPCAL {
         crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
 
         for (int iPhi=0; iPhi<nPhiEndcap; iPhi++) {
-          if (debugLevel>0) std::cout << "  Endcap: phi: " << iPhi << std::endl;
+          if (debugLevel>1) std::cout << "  Endcap: phi: " << iPhi << std::endl;
 
           //Add suffix 1 for the other endcap (mirrored)
           auto crystalFId64=segmentation->setVolumeID(1,(nThetaBarrel+nThetaEndcap-iTheta), iPhi, 1);
@@ -315,38 +334,26 @@ namespace ddSCEPCAL {
           int crystalRId321=segmentation->getFirst32bits(crystalRId641);
 
           double phi=iPhi*dPhiEndcap;
-           ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
+          ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
 
           RotationZYX rot(M_PI/2, thC, 0);
           rot = rotZ*rot;
-
-          //Mirrored copy has PI rotation and -z translation
-          RotationZYX rot1(M_PI/2, thC, M_PI);
-          rot1 = rotZ*rot1;
 
           double rF=r0+Fdz/2.;
           Position dispF(rF*sin(thC)*cos(phi),
                         rF*sin(thC)*sin(phi),
                         rF*cos(thC));
 
-          Position dispF1(rF*sin(thC)*cos(phi),
-                        rF*sin(thC)*sin(phi),
-                        -rF*cos(thC));
-
           double rR=r1+Rdz/2.;
           Position dispR(rR*sin(thC)*cos(phi),
                         rR*sin(thC)*sin(phi),
                         rR*cos(thC));
 
-          Position dispR1(rR*sin(thC)*cos(phi),
-                        rR*sin(thC)*sin(phi),
-                        -rR*cos(thC));
-
           dd4hep::PlacedVolume crystalFp = phiRingAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispCone) );
           dd4hep::PlacedVolume crystalRp = phiRingAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispCone) );
 
-          dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot1,dispF1-dispCone1) );
-          dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot1,dispR1-dispCone1) );
+          dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
+          dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
 
           crystalFp.addPhysVolID("eta", (nThetaBarrel+nThetaEndcap-iTheta));
           crystalFp.addPhysVolID("phi", iPhi);

@@ -943,6 +943,8 @@
     <vis name="instVis"      alpha="1.0" r="0.1"  g="0.1"  b="0.1"  showDaughters="true"  visible="true"/>
 
     <vis name="scepcalAssemblyVis"  alpha="0.1" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="true"/>
+    <vis name="scepcalAssemblyGlobalVis"  alpha="0.1" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
+
   </display>
 
   <detectors>
@@ -959,8 +961,10 @@
       <inst                               material="AluminumOxide" vis="instVis"/>
 
       <scepcalAssembly vis="scepcalAssemblyVis"/>
+      <scepcalAssemblyGlobalVis vis="scepcalAssemblyGlobalVis"/>
 
-      <printDebug level="9"/>
+
+      <printDebug level="1"/>
 
     </detector>
 
