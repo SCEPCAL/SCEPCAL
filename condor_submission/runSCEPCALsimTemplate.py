@@ -10,9 +10,9 @@ pgun = MomentumRangeParticleGun("PGun",
   PdgCodes=[MYPARTICLE], # 11 electron
   MomentumMin = MYENERGY.*units.GeV, # GeV
   MomentumMax = MYENERGY.*units.GeV, # GeV
-  ThetaMin = 0.1, # rad
+  ThetaMin = 0.04, # rad
   ThetaMax = 3.1, # rad
-  PhiMin = 0.0, # rad
+  PhiMin = 0, # rad
   PhiMax = 6.28, # rad
 )
 
@@ -38,7 +38,7 @@ geoservice = GeoSvc(
 
 from Configurables import SimG4Svc, SimG4OpticalPhysicsList
 
-opticalPhysicsTool = SimG4OpticalPhysicsList("opticalPhysics", fullphysics="SimG4FtfpBert")
+opticalPhysicsTool = SimG4OpticalPhysicsList("opticalPhysics", fullphysics="SimG4FtfpBert", SetScintillation=False)
 
 from Configurables import SimG4SCEPCALActions
 actionTool = SimG4SCEPCALActions("SimG4SCEPCALActions")
@@ -46,7 +46,9 @@ actionTool = SimG4SCEPCALActions("SimG4SCEPCALActions")
 # Name of the tool in GAUDI is "XX/YY" where XX is the tool class name and YY is the given name
 geantservice = SimG4Svc("SimG4Svc",
   physicslist = opticalPhysicsTool,
-  actions = actionTool
+  actions = actionTool, 
+  randomNumbersFromGaudi = False,
+  seedValue = RNDSEED
 )
 
 from Configurables import SimG4Alg, SimG4PrimariesFromEdmTool

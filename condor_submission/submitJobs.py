@@ -9,7 +9,8 @@ import subprocess
 import argparse
 import time
 import datetime
-
+import random
+ 
 #print date
 print("----------------------------------------------------------------------------------")
 print(datetime.datetime.now())
@@ -47,6 +48,7 @@ for ijob in range(0,args.jobs):
     contents = fi.read()
     replaced_contents = contents.replace("MYPARTICLE", str(args.pdg))
     replaced_contents = replaced_contents.replace("MYBASEDIR",str(args.basedir)) 
+    replaced_contents = replaced_contents.replace("RNDSEED",str(random.randint(1,2147483647))) 
     replaced_contents = replaced_contents.replace("MYENERGY",str(args.energy)) 
     replaced_contents = replaced_contents.replace("MYNEVENTS",str(args.events)) 
     replaced_contents = replaced_contents.replace("MYJOBID",str(ijob)) 
@@ -65,12 +67,13 @@ outScript.write("#!/bin/sh -e\n")
 outScript.write('CONFIGFILE=$1\n')
 #outScript.write('source %s/setupSCEPCAL.sh\n'%args.basedir)
 
-outScript.write("source /cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc8-opt/setup.sh\n")
-outScript.write("export PYTHIA8_ROOT_DIR=/cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc8-opt/\n")
-outScript.write("source /cvmfs/sft.cern.ch/lcg/releases/LCG_100/DD4hep/01.16.01/x86_64-centos7-gcc8-opt/bin/thisdd4hep.sh\n")
-outScript.write("source %s/init_k4.sh\n"%args.basedir)
-outScript.write("source %s/init_sipm.sh\n"%args.basedir)
+#outScript.write("source /cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc8-opt/setup.sh\n")
+#outScript.write("export PYTHIA8_ROOT_DIR=/cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc8-opt/\n")
+#outScript.write("source /cvmfs/sft.cern.ch/lcg/releases/LCG_100/DD4hep/01.16.01/x86_64-centos7-gcc8-opt/bin/thisdd4hep.sh\n")
+#outScript.write("source %s/init_k4.sh\n"%args.basedir)
+#outScript.write("source %s/init_sipm.sh\n"%args.basedir)
 
+outScript.write("source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh\n")
 outScript.write("export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%s/install/lib64\n"%args.basedir)
 outScript.write("export PYTHONPATH=$PYTHONPATH:%s/install/python\n"%args.basedir)
 
