@@ -285,7 +285,16 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
         double r2min = r2*sin(thC) -y2*sin(M_PI/2-thC);
         double r2max = r2min + 2*y2/cos(thC);
 
-        dd4hep::Cone phiRingAssemblyShape(zcone, r1min, r1max, r2min, r2max);
+        // dd4hep::Cone phiRingAssemblyShape(zcone, r1min, r1max, r2min, r2max);
+
+        double zPolyhedra[] = {z1,z2};
+        double rminPolyhedra[] = {r1min, r2min};
+        double rmaxPolyhedra[] = {r1max, r2max};
+
+        dd4hep::Polyhedra phiRingAssemblyShape(nPhiEndcap, 0, dPhiEndcap, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
+        
+        // Polyhedra(int nsides, double start, double delta,
+              // const std::vector<double>& z, const std::vector<double>& rmin, const std::vector<double>& rmax)
 
         dd4hep::Volume phiRingAssemblyVolume("EndcapRingAssembly", phiRingAssemblyShape, theDetector.material("Vacuum"));
         dd4hep::Volume phiRingAssemblyVolume1("EndcapRingAssembly1", phiRingAssemblyShape, theDetector.material("Vacuum"));
