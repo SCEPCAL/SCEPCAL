@@ -82,8 +82,10 @@ namespace ddSCEPCAL {
       scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyGlobalVisXML.visStr());
 
       // Make one theta slice then rotate in phi (i.e. theta nested in phi)
-
-      for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
+std::cout << "nThetaBarrel: " << nThetaBarrel << std::endl;
+std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
+      // for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
+      for (int iPhi=0; iPhi<1; iPhi++) {
 
         if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
 
@@ -240,9 +242,12 @@ namespace ddSCEPCAL {
       }
 
       // Endcap
+std::cout << "nThetaEndcap: " << nThetaEndcap << std::endl;
+
       for (int iTheta=1; iTheta<nThetaEndcap; iTheta++) {
 
         if (debugLevel>1) std::cout << "Endcap: theta: " << iTheta << std::endl;
+        if (iTheta%2==0) continue;
 
         double thC        =iTheta*dThetaEndcap;
         double RinEndcap  = EBz*tan(thC);
@@ -250,6 +255,7 @@ namespace ddSCEPCAL {
         // Same calculations, except nPhiEndcap changes for each theta instead of being constant
         int    nPhiEndcap =floor(2*M_PI*RinEndcap/nomfw);
         double dPhiEndcap =2*M_PI/nPhiEndcap;
+std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
 
         double r0=RinEndcap/sin(thC);
         double r1=r0+Fdz;
@@ -292,7 +298,7 @@ namespace ddSCEPCAL {
         RotationZYX rotMirror(0, 0, M_PI);
 
         scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume, dispCone );
-        scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
+        // scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
 
         // Make crystal shapes
         double x0y0 = (r0*cos(thC) +y0*sin(thC)) *tan(thC -dThetaEndcap/2.) *tan(dPhiEndcap/2.);
@@ -320,6 +326,8 @@ namespace ddSCEPCAL {
         crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
 
         for (int iPhi=0; iPhi<nPhiEndcap; iPhi++) {
+        if (iPhi%3==0) continue;
+          
           if (debugLevel>1) std::cout << "  Endcap: phi: " << iPhi << std::endl;
 
           //Add suffix 1 for the other endcap (mirrored)
@@ -352,8 +360,8 @@ namespace ddSCEPCAL {
           dd4hep::PlacedVolume crystalFp = phiRingAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispCone) );
           dd4hep::PlacedVolume crystalRp = phiRingAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispCone) );
 
-          dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
-          dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
+          // dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
+          // dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
 
           crystalFp.addPhysVolID("eta", (nThetaBarrel+nThetaEndcap-iTheta));
           crystalFp.addPhysVolID("phi", iPhi);
@@ -366,15 +374,15 @@ namespace ddSCEPCAL {
           crystalRp.addPhysVolID("system", 1);
 
 
-          crystalFp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
-          crystalFp1.addPhysVolID("phi", iPhi);
-          crystalFp1.addPhysVolID("depth", 1);
-          crystalFp1.addPhysVolID("system", 1);
+          // crystalFp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
+          // crystalFp1.addPhysVolID("phi", iPhi);
+          // crystalFp1.addPhysVolID("depth", 1);
+          // crystalFp1.addPhysVolID("system", 1);
 
-          crystalRp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
-          crystalRp1.addPhysVolID("phi", iPhi);
-          crystalRp1.addPhysVolID("depth", 2);
-          crystalRp1.addPhysVolID("system", 1);
+          // crystalRp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
+          // crystalRp1.addPhysVolID("phi", iPhi);
+          // crystalRp1.addPhysVolID("depth", 2);
+          // crystalRp1.addPhysVolID("system", 1);
 
           std::bitset<10> _eta((nThetaBarrel+nThetaEndcap-iTheta));
           std::bitset<10> _eta1(-(nThetaBarrel+nThetaEndcap-iTheta));
