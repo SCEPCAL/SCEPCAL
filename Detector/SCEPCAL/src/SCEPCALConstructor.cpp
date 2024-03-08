@@ -287,9 +287,9 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
 
         // dd4hep::Cone phiRingAssemblyShape(zcone, r1min, r1max, r2min, r2max);
 
-        double zPolyhedra[] = {z1,z2};
-        double rminPolyhedra[] = {r1min, r2min};
-        double rmaxPolyhedra[] = {r1max, r2max};
+        std::vector<double> zPolyhedra[] = {z1,z2};
+        std::vector<double> rminPolyhedra[] = {r1min, r2min};
+        std::vector<double> rmaxPolyhedra[] = {r1max, r2max};
 
         dd4hep::Polyhedra phiRingAssemblyShape(nPhiEndcap, 0., dPhiEndcap, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
 
