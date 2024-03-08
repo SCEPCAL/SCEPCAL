@@ -302,7 +302,8 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
         phiRingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
         phiRingAssemblyVolume1.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
 
-        Position dispCone(0,0,z1+zcone);
+        // Position dispCone(0,0,z1+zcone);
+        Position dispCone(0,0,0);
         Position dispCone1(0,0,-(z1+zcone));
         RotationZYX rotMirror(0, 0, M_PI);
 
