@@ -82,10 +82,10 @@ namespace ddSCEPCAL {
       scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyGlobalVisXML.visStr());
 
       // Make one theta slice then rotate in phi (i.e. theta nested in phi)
-std::cout << "nThetaBarrel: " << nThetaBarrel << std::endl;
-std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
-      // for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
-      for (int iPhi=0; iPhi<1; iPhi++) {
+// std::cout << "nThetaBarrel: " << nThetaBarrel << std::endl;
+// std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
+      for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
+      // for (int iPhi=0; iPhi<0; iPhi++) {
 
         if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
 
@@ -131,7 +131,7 @@ std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
 
           if (debugLevel>1) std::cout << "  Barrel: theta: " << iTheta << std::endl;
 
-          if (iTheta == nThetaBarrel) continue;
+          // if (iTheta == nThetaBarrel) continue;
           double thC =thetaSizeEndcap+(iTheta*dThetaBarrel);
 
           // Projective trapezoids using EightPointSolids. see: https://root.cern.ch/doc/master/classTGeoArb8.html
@@ -242,12 +242,12 @@ std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
       }
 
       // Endcap
-std::cout << "nThetaEndcap: " << nThetaEndcap << std::endl;
+// std::cout << "nThetaEndcap: " << nThetaEndcap << std::endl;
 
       for (int iTheta=1; iTheta<nThetaEndcap; iTheta++) {
 
         if (debugLevel>1) std::cout << "Endcap: theta: " << iTheta << std::endl;
-        if (iTheta%2==0) continue;
+        // if (iTheta%2==1) continue;
 
         double thC        =iTheta*dThetaEndcap;
         double RinEndcap  = EBz*tan(thC);
@@ -255,7 +255,7 @@ std::cout << "nThetaEndcap: " << nThetaEndcap << std::endl;
         // Same calculations, except nPhiEndcap changes for each theta instead of being constant
         int    nPhiEndcap =floor(2*M_PI*RinEndcap/nomfw);
         double dPhiEndcap =2*M_PI/nPhiEndcap;
-std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
+// std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
 
         double r0=RinEndcap/sin(thC);
         double r1=r0+Fdz;
@@ -271,19 +271,22 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
         // changed to 14, since aspect ratio of first tower (42/-42) is 14.9
         if (abs(1-y0/centralHalfWidthActual)>0.14) {
           //std::cout << " More than 14% --> SKIPPING ... " << std::endl;
+          // std::cout << "skipping nPhiEndcap: " << nPhiEndcap << std::endl;
           continue;
         }
 
-        // Make assembly cone
-        double z1 = r0*cos(thC) -y0*cos(thC);
-        double z2 = r2*cos(thC) +y2*cos(M_PI/2-thC);
+        // Make assembly polyhedra
+        double a = r0/cos(dThetaEndcap/2);
+        double z1 = a*cos(thC+dThetaEndcap/2);
+        double r1min = z1*tan(thC-dThetaEndcap/2);
+        double r1max = z1*tan(thC+dThetaEndcap/2);
+
+        double b = sqrt(r2*r2 +y2*y2);
+        double z2 = b*cos(thC-dThetaEndcap/2);
+        double r2min = z2*tan(thC-dThetaEndcap/2);
+        double r2max = z2*tan(thC+dThetaEndcap/2);
+
         double zcone = (z2-z1)/2;
-
-        double r1max = r0*sin(thC) +y0*sin(thC);
-        double r1min = r1max - 2*y0/cos(M_PI/2-thC);
-
-        double r2min = r2*sin(thC) -y2*sin(M_PI/2-thC);
-        double r2max = r2min + 2*y2/cos(thC);
 
         // dd4hep::Cone phiRingAssemblyShape(zcone, r1min, r1max, r2min, r2max);
 
@@ -291,10 +294,9 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
         std::vector<double> rminPolyhedra = {r1min, r2min};
         std::vector<double> rmaxPolyhedra = {r1max, r2max};
 
-        dd4hep::Polyhedra phiRingAssemblyShape(nPhiEndcap, 0., dPhiEndcap, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
+        dd4hep::Polyhedra phiRingAssemblyShape(nPhiEndcap, 0., 2*M_PI, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
 
-        // Polyhedra(int nsides, double start, double delta,
-              // const std::vector<double>& z, const std::vector<double>& rmin, const std::vector<double>& rmax)
+        // Polyhedra(int nsides, double start, double delta, const std::vector<double>& z, const std::vector<double>& rmin, const std::vector<double>& rmax)
 
         dd4hep::Volume phiRingAssemblyVolume("EndcapRingAssembly", phiRingAssemblyShape, theDetector.material("Vacuum"));
         dd4hep::Volume phiRingAssemblyVolume1("EndcapRingAssembly1", phiRingAssemblyShape, theDetector.material("Vacuum"));
@@ -304,11 +306,12 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
 
         // Position dispCone(0,0,z1+zcone);
         Position dispCone(0,0,0);
-        Position dispCone1(0,0,-(z1+zcone));
+        // Position dispCone1(0,0,-(z1+zcone));
+        Position dispCone1(0,0,0);
         RotationZYX rotMirror(0, 0, M_PI);
 
         scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume, dispCone );
-        // scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
+        scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
 
         // Make crystal shapes
         double x0y0 = (r0*cos(thC) +y0*sin(thC)) *tan(thC -dThetaEndcap/2.) *tan(dPhiEndcap/2.);
@@ -336,7 +339,7 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
         crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
 
         for (int iPhi=0; iPhi<nPhiEndcap; iPhi++) {
-        if (iPhi%3==0) continue;
+        // if (iPhi!=0) continue;
           
           if (debugLevel>1) std::cout << "  Endcap: phi: " << iPhi << std::endl;
 
@@ -370,8 +373,8 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
           dd4hep::PlacedVolume crystalFp = phiRingAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispCone) );
           dd4hep::PlacedVolume crystalRp = phiRingAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispCone) );
 
-          // dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
-          // dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
+          dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
+          dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
 
           crystalFp.addPhysVolID("eta", (nThetaBarrel+nThetaEndcap-iTheta));
           crystalFp.addPhysVolID("phi", iPhi);
@@ -384,15 +387,15 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
           crystalRp.addPhysVolID("system", 1);
 
 
-          // crystalFp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
-          // crystalFp1.addPhysVolID("phi", iPhi);
-          // crystalFp1.addPhysVolID("depth", 1);
-          // crystalFp1.addPhysVolID("system", 1);
+          crystalFp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
+          crystalFp1.addPhysVolID("phi", iPhi);
+          crystalFp1.addPhysVolID("depth", 1);
+          crystalFp1.addPhysVolID("system", 1);
 
-          // crystalRp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
-          // crystalRp1.addPhysVolID("phi", iPhi);
-          // crystalRp1.addPhysVolID("depth", 2);
-          // crystalRp1.addPhysVolID("system", 1);
+          crystalRp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
+          crystalRp1.addPhysVolID("phi", iPhi);
+          crystalRp1.addPhysVolID("depth", 2);
+          crystalRp1.addPhysVolID("system", 1);
 
           std::bitset<10> _eta((nThetaBarrel+nThetaEndcap-iTheta));
           std::bitset<10> _eta1(-(nThetaBarrel+nThetaEndcap-iTheta));
@@ -401,7 +404,15 @@ std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
           std::bitset<3>  depthR(2);
           std::bitset<32> id32F(crystalFId32);
           std::bitset<32> id32F1(crystalFId321);
-          std::bitset<32> id32R(crystalRId32);
+          std::bitset<32> id32R(crystalRId32);          crystalFp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
+          crystalFp1.addPhysVolID("phi", iPhi);
+          crystalFp1.addPhysVolID("depth", 1);
+          crystalFp1.addPhysVolID("system", 1);
+
+          crystalRp1.addPhysVolID("eta", -(nThetaBarrel+nThetaEndcap-iTheta));
+          crystalRp1.addPhysVolID("phi", iPhi);
+          crystalRp1.addPhysVolID("depth", 2);
+          crystalRp1.addPhysVolID("system", 1);
           std::bitset<32> id32R1(crystalRId321);
 
 
