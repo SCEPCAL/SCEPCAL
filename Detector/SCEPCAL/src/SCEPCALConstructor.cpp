@@ -82,8 +82,9 @@ namespace ddSCEPCAL {
       scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyGlobalVisXML.visStr());
 
       // Make one theta slice then rotate in phi (i.e. theta nested in phi)
-// std::cout << "nThetaBarrel: " << nThetaBarrel << std::endl;
-// std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
+      // std::cout << "nThetaBarrel: " << nThetaBarrel << std::endl;
+      // std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
+      
       for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
       // for (int iPhi=0; iPhi<0; iPhi++) {
 
@@ -242,7 +243,7 @@ namespace ddSCEPCAL {
       }
 
       // Endcap
-// std::cout << "nThetaEndcap: " << nThetaEndcap << std::endl;
+      // std::cout << "nThetaEndcap: " << nThetaEndcap << std::endl;
 
       for (int iTheta=1; iTheta<nThetaEndcap; iTheta++) {
 
@@ -255,7 +256,7 @@ namespace ddSCEPCAL {
         // Same calculations, except nPhiEndcap changes for each theta instead of being constant
         int    nPhiEndcap =floor(2*M_PI*RinEndcap/nomfw);
         double dPhiEndcap =2*M_PI/nPhiEndcap;
-// std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
+        // std::cout << "nPhiEndcap: " << nPhiEndcap << std::endl;
 
         double r0=RinEndcap/sin(thC);
         double r1=r0+Fdz;
