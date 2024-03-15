@@ -85,8 +85,14 @@ namespace ddSCEPCAL {
       // std::cout << "nThetaBarrel: " << nThetaBarrel << std::endl;
       // std::cout << "nPhiBarrel: " << nPhiBarrel << std::endl;
       
-      for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
-      // for (int iPhi=0; iPhi<0; iPhi++) {
+      /** 
+       * 
+       * Barrel
+       * 
+       * **/
+
+      // for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
+      for (int iPhi=0; iPhi<0; iPhi++) {
 
         if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
 
@@ -242,13 +248,18 @@ namespace ddSCEPCAL {
         }
       }
 
-      // Endcap
+      /** 
+       * 
+       * Endcap
+       * 
+       * **/
+
       // std::cout << "nThetaEndcap: " << nThetaEndcap << std::endl;
 
       for (int iTheta=1; iTheta<nThetaEndcap; iTheta++) {
 
         if (debugLevel>1) std::cout << "Endcap: theta: " << iTheta << std::endl;
-        // if (iTheta%2==1) continue;
+        if (iTheta%2==1) continue;
 
         double thC        =iTheta*dThetaEndcap;
         double RinEndcap  = EBz*tan(thC);
