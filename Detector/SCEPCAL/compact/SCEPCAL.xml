@@ -28,7 +28,7 @@
     <readout name="SCEPCALreadout">
       <segmentation type="SCEPCALSegmentation"/>
       <!-- Mendatory to use the first 32 bits for tower infos & the last 32 bits for fiber/SiPM infos -->
-      <id>system:5,eta:-10,phi:12,depth:3,sipm:3,c:1,module:3</id>
+      <id>system:5,eta:-11,phi:12,depth:3,sipm:3,c:1,module:3</id>
     </readout>
   </readouts>
 
@@ -942,23 +942,29 @@
     <vis name="timingVis"    alpha="1" r="0.0"  g="1.0"  b="0.0"  showDaughters="true"  visible="true"/>
     <vis name="instVis"      alpha="1.0" r="0.1"  g="0.1"  b="0.1"  showDaughters="true"  visible="true"/>
 
-    <vis name="towerAssemblyVis"  alpha="0.1" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="true"/>
+    <vis name="scepcalAssemblyVis"  alpha="0.5" r="0.3"  g="0.2"  b="0.2"  showDaughters="true"  visible="true"/>
+    <vis name="scepcalAssemblyGlobalVis"  alpha="0.1" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
+
   </display>
 
   <detectors>
 
     <detector id="2" name="ECalBarrel" type="SCEPCAL" readout="SCEPCALreadout" vis="Invisible">
 
-      <sensitive type="SCEPCALSiPMSD"/>
+      <sensitive type="tracker"/>
 
-      <dim    barrelHalfZ="2.25*m" barrelInnerR="2*m" crystalFaceWidthNominal="30*mm"/>
+      <dim    barrelHalfZ="2.25*m" barrelInnerR="2*m" crystalFaceWidthNominal="100*mm"/>
 
       <crystalF       length="50*mm"      material="PbWO"          vis="crystalFVis"/>
       <crystalR       length="150*mm"     material="PbWO"          vis="crystalRVis"/>
       <timingLayer                        material="LYSO"          vis="timingVis"/>
       <inst                               material="AluminumOxide" vis="instVis"/>
 
-      <towerAssembly cube="3.5*m" vis="towerAssemblyVis"/>
+      <scepcalAssembly vis="scepcalAssemblyVis"/>
+      <scepcalAssemblyGlobalVis vis="scepcalAssemblyGlobalVis"/>
+
+
+      <printDebug level="1"/>
 
     </detector>
 
