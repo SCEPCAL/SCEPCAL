@@ -258,7 +258,7 @@ namespace ddSCEPCAL {
        * **/
 
       // for (int iTheta=1; iTheta<nThetaEndcap; iTheta++) {
-      for (int iTheta=nThetaEndcap-10; iTheta<nThetaEndcap; iTheta++) {
+      for (int iTheta=nThetaEndcap-6; iTheta<nThetaEndcap-5; iTheta++) {
 
         if (debugLevel>1) std::cout << "Endcap: theta: " << iTheta << std::endl;
 
@@ -309,7 +309,7 @@ namespace ddSCEPCAL {
         std::vector<double> rminPolyhedra = {r1min, r2min};
         std::vector<double> rmaxPolyhedra = {r1max, r2max};
 
-        dd4hep::Polyhedra phiRingAssemblyShape(nPhiEndcap, -dPhiEndcapCrystal/2, 2*M_PI, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
+        dd4hep::Polyhedra phiRingAssemblyShape(nPhiEndcap, dPhiEndcap/2, 2*M_PI, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
 
         Position dispCone(0,0,0);
         Position dispCone1(0,0,0);
@@ -326,40 +326,133 @@ namespace ddSCEPCAL {
         // scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
 
         // for (int iPhi=0; iPhi<nPhiEndcap; iPhi++) {
-        for (int iPhi=0; iPhi<1; iPhi++) {
+        for (int iPhi=3; iPhi<4; iPhi++) {
 
           for (int nGamma=0; nGamma<nPhiEndcapCrystal; nGamma++) {
             
             // double aEndcap = RinEndcap*cos(dPhiEndcap/2);
+            double phiGamma = dPhiEndcap/2-dPhiEndcapCrystal/2-dPhiEndcapCrystal*nGamma;
             double aEndcap = RinEndcap;
-            double RinBnE = aEndcap/ abs(cos(dPhiEndcap/2-dPhiEndcapCrystal/2-dPhiEndcapCrystal*nGamma));
 
-            double thCe = atan(RinBnE/EBz);
+            // double thCe = atan(RinBnE/EBz);
 
             // Make crystal shapes
-            double r0=RinBnE/sin(thCe);
+            double r0adj= aEndcap*abs(tan(phiGamma));
+            double r0= sqrt(r0adj*r0adj + r0e*r0e);
 
             double r1=r0+Fdz;
             double r2=r1+Rdz;
+
+            double ratio0te = r0/r0e;
+            double ratio1te = r1/r0e;
+            double ratio2te = r2/r0e;
+
+            double r1adj = (r1e/r0e)*r0adj;
+            double r2adj = (r2e/r0e)*r0adj;
 
             double y0=r0*tan(dThetaEndcap/2.);
             double y1=r1*tan(dThetaEndcap/2.);
             double y2=r2*tan(dThetaEndcap/2.);
 
-            double x0y0 = (r0*cos(thCe) +y0*sin(thCe)) *tan(thCe -dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
-            double x1y0 = (r0*cos(thCe) -y0*sin(thCe)) *tan(thCe +dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
 
-            double x0y1 = (r1*cos(thCe) +y1*sin(thCe)) *tan(thCe -dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
-            double x1y1 = (r1*cos(thCe) -y1*sin(thCe)) *tan(thCe +dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double RinBnEl = aEndcap/ cos(phiGamma-dPhiEndcapCrystal/2);
+            double RinBnEr = aEndcap/ cos(phiGamma+dPhiEndcapCrystal/2);
 
-            double x0y2 = (r2*cos(thCe) +y2*sin(thCe)) *tan(thCe -dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
-            double x1y2 = (r2*cos(thCe) -y2*sin(thCe)) *tan(thCe +dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double y0adjl = -(RinBnEl-aEndcap)*cos(phiGamma-dPhiEndcapCrystal/2);
+            double y0adjr = -(RinBnEr-aEndcap)*cos(phiGamma+dPhiEndcapCrystal/2);
 
-            double verticesF[]={x0y0,y0,x1y0,-y0,-x1y0,-y0,-x0y0,y0,
-                                x0y1,y1,x1y1,-y1,-x1y1,-y1,-x0y1,y1};
+            double y1adjl = y0adjl*(r1/r0);
+            double y1adjr = y0adjr*(r1/r0);
 
-            double verticesR[]={x0y1,y1,x1y1,-y1,-x1y1,-y1,-x0y1,y1,
-                                x0y2,y2,x1y2,-y2,-x1y2,-y2,-x0y2,y2};
+            double y2adjl = y0adjl*(r2/r0);
+            double y2adjr = y0adjr*(r2/r0);
+
+            double sf = cos(phiGamma);
+            // double sf = 1;
+
+            double alpha = dPhiEndcapCrystal/2;
+            double beta = M_PI/2 -alpha;
+            double gamma = abs(phiGamma);
+            double epsilon = M_PI/2 -gamma;
+
+            double rho = M_PI -(beta+epsilon);
+            double rho_l = M_PI/2 -beta;
+
+            double omega = M_PI -(epsilon+rho);
+            double nu = M_PI/2 - omega;
+
+            // double a = x0y0;
+            // double b = a*cos(gamma);
+            // double c = a*sin(gamma);
+
+            // double e = c/cos(rho);
+            // double e_l = c/cos(nu);
+
+            // double f_l = e_l*cos(beta);
+            // double f = e/cos(omega);
+
+            // double g_l = e_l*cos(rho_l);
+            // double g = e/cos(nu);
+
+            double x0y0 = (r0e*cos(thC) +y0e*sin(thC)) *tan(thC -dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double x0y0corrl = ((x0y0*sin(gamma))/cos(nu))*cos(beta); //f_l
+            double x0y0corrr = ((x0y0*sin(gamma))/cos(rho))/cos(omega); //f_r
+            double y0lcorrx0 = ((x0y0*sin(gamma))/cos(nu))*cos(rho_l); //g_l
+            double y0rcorrx0 = ((x0y0*sin(gamma))/cos(rho))/cos(nu); //g_r
+
+            double x1y0 = (r0e*cos(thC) -y0e*sin(thC)) *tan(thC +dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double x1y0corrl = ((x1y0*sin(gamma))/cos(nu))*cos(beta); //f_l
+            double x1y0corrr = ((x1y0*sin(gamma))/cos(rho))/cos(omega); //f_r
+            double y0lcorrx1 = ((x1y0*sin(gamma))/cos(nu))*cos(rho_l); //g_l
+            double y0rcorrx1 = ((x1y0*sin(gamma))/cos(rho))/cos(nu); //g_r
+
+            double x0y1 = (r1e*cos(thC) +y1e*sin(thC)) *tan(thC -dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double x0y1corrl = ((x0y1*sin(gamma))/cos(nu))*cos(beta); //f_l
+            double x0y1corrr = ((x0y1*sin(gamma))/cos(rho))/cos(omega); //f_r
+            double y1lcorrx0 = ((x0y1*sin(gamma))/cos(nu))*cos(rho_l); //g_l
+            double y1rcorrx0 = ((x0y1*sin(gamma))/cos(rho))/cos(nu); //g_r
+
+            double x1y1 = (r1e*cos(thC) -y1e*sin(thC)) *tan(thC +dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double x1y1corrl = ((x1y1*sin(gamma))/cos(nu))*cos(beta); //f_l
+            double x1y1corrr = ((x1y1*sin(gamma))/cos(rho))/cos(omega); //f_r
+            double y1lcorrx1 = ((x1y1*sin(gamma))/cos(nu))*cos(rho_l); //g_l
+            double y1rcorrx1 = ((x1y1*sin(gamma))/cos(rho))/cos(nu); //g_r
+
+            double x0y2 = (r2e*cos(thC) +y2e*sin(thC)) *tan(thC -dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double x0y2corrl = ((x0y2*sin(gamma))/cos(nu))*cos(beta); //f_l
+            double x0y2corrr = ((x0y2*sin(gamma))/cos(rho))/cos(omega); //f_r
+            double y2lcorrx0 = ((x0y2*sin(gamma))/cos(nu))*cos(rho_l); //g_l
+            double y2rcorrx0 = ((x0y2*sin(gamma))/cos(rho))/cos(nu); //g_r
+
+            double x1y2 = (r2e*cos(thC) -y2e*sin(thC)) *tan(thC +dThetaEndcap/2.) *tan(dPhiEndcapCrystal/2.);
+            double x1y2corrl = ((x1y2*sin(gamma))/cos(nu))*cos(beta); //f_l
+            double x1y2corrr = ((x1y2*sin(gamma))/cos(rho))/cos(omega); //f_r
+            double y2lcorrx1 = ((x1y2*sin(gamma))/cos(nu))*cos(rho_l); //g_l
+            double y2rcorrx1 = ((x1y2*sin(gamma))/cos(rho))/cos(nu); //g_r
+
+            double verticesF[]={
+                                x0y0 -x0y0corrl,  y0e +y0lcorrx0,
+                                x1y0 -x1y0corrl, -y0e +y0lcorrx1,
+                               -x1y0 -x1y0corrr, -y0e -y0rcorrx1,
+                               -x0y0 -x0y0corrr,  y0e -y0rcorrx0,
+
+                                 x0y1 -x0y1corrl,  y1e +y1lcorrx0,
+                                 x1y1 -x1y1corrl, -y1e +y1lcorrx1,
+                                -x1y1 -x1y1corrr, -y1e -y1rcorrx1,
+                                -x0y1 -x0y1corrr,  y1e -y1rcorrx0
+                                };
+
+            double verticesR[]={
+                                 x0y1 -x0y1corrl,  y1e +y1lcorrx0,
+                                 x1y1 -x1y1corrl, -y1e +y1lcorrx1,
+                                -x1y1 -x1y1corrr, -y1e -y1rcorrx1,
+                                -x0y1 -x0y1corrr,  y1e -y1rcorrx0,
+
+                                 x0y2 -x0y2corrl,  y2e +y2lcorrx0,
+                                 x1y2 -x1y2corrl, -y2e +y2lcorrx1,
+                                -x1y2 -x1y2corrr, -y2e -y2rcorrx1,
+                                -x0y2 -x0y2corrr,  y2e -y2rcorrx0
+                                };
 
             dd4hep::EightPointSolid crystalFShape(Fdz/2, verticesF);
             dd4hep::EightPointSolid crystalRShape(Rdz/2, verticesR);
@@ -372,20 +465,20 @@ namespace ddSCEPCAL {
             
             if (debugLevel>1) std::cout << "  Endcap: phi: " << iPhi << std::endl;
 
-            double phi=iPhi*dPhiEndcap+nGamma*dPhiEndcapCrystal;
-            RotationZYX rot(M_PI/2, thCe, 0);
+            double phi=iPhi*dPhiEndcap+dPhiEndcapCrystal/2.+nGamma*dPhiEndcapCrystal +dPhiEndcap/2;
+            RotationZYX rot(M_PI/2, thC, 0);
             ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
             rot = rotZ*rot;
 
             double rF=r0+Fdz/2.;
-            Position dispF(rF*sin(thCe)*cos(phi),
-                          rF*sin(thCe)*sin(phi),
-                          rF*cos(thCe));
+            Position dispF(rF*sin(thC)*cos(phi),
+                          rF*sin(thC)*sin(phi),
+                          rF*cos(thC));
 
             double rR=r1+Rdz/2.;
-            Position dispR(rR*sin(thCe)*cos(phi),
-                          rR*sin(thCe)*sin(phi),
-                          rR*cos(thCe));
+            Position dispR(rR*sin(thC)*cos(phi),
+                          rR*sin(thC)*sin(phi),
+                          rR*cos(thC));
 
             auto crystalFId64=segmentation->setVolumeID(1, iTheta, iPhi*nPhiEndcap+nGamma, 1);
             auto crystalRId64=segmentation->setVolumeID(1, iTheta, iPhi*nPhiEndcap+nGamma, 2);
