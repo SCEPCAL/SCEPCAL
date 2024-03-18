@@ -34,7 +34,8 @@ namespace ddSCEPCAL {
       xml_comp_t dimXML=detectorXML.child(_Unicode(dim));
       xml_comp_t crystalFXML=detectorXML.child(_Unicode(crystalF));
       xml_comp_t crystalRXML=detectorXML.child(_Unicode(crystalR));
-      xml_comp_t timingXML=detectorXML.child(_Unicode(timingLayer));
+      xml_comp_t timingTrXML=detectorXML.child(_Unicode(timingLayerTr));
+      xml_comp_t timingLgXML=detectorXML.child(_Unicode(timingLayerLg));
       xml_comp_t instXML=detectorXML.child(_Unicode(inst));
       xml_comp_t scepcalAssemblyGlobalVisXML=detectorXML.child(_Unicode(scepcalAssemblyGlobalVis));
       xml_comp_t scepcalAssemblyXML=detectorXML.child(_Unicode(scepcalAssembly));
@@ -56,13 +57,15 @@ namespace ddSCEPCAL {
       const double Fdz    =crystalFXML.attr<double>(_Unicode(length));
       const double Rdz    =crystalRXML.attr<double>(_Unicode(length));
       const double nomfw  =dimXML.attr<double>(_Unicode(crystalFaceWidthNominal));
+      const double nomth  =dimXML.attr<double>(_Unicode(crystalTimingThicknessNominal));
       const double EBz    =dimXML.attr<double>(_Unicode(barrelHalfZ));
       const double Rin    =dimXML.attr<double>(_Unicode(barrelInnerR));
 
       // Material definitions
       dd4hep::Material crystalFMat =theDetector.material(crystalFXML.materialStr());
       dd4hep::Material crystalRMat =theDetector.material(crystalRXML.materialStr());
-      dd4hep::Material timingMat   =theDetector.material(timingXML.materialStr());
+      dd4hep::Material timingTrMat =theDetector.material(timingTrXML.materialStr());
+      dd4hep::Material timingLgMat =theDetector.material(timingLgXML.materialStr());
       dd4hep::Material instMat     =theDetector.material(instXML.materialStr());
 
       // Begin geometry calculations
@@ -96,24 +99,99 @@ namespace ddSCEPCAL {
 
         if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
 
+        // Shared calculations for timing layer and barrel envelopes
+        double thC_end = thetaSizeEndcap+dThetaBarrel/2;
+
+        double r0slice_end =Rin/sin(thC_end);
+        double y0slice_end =r0slice_end*tan(dThetaBarrel/2.);
+        double slice_front_jut = y0slice_end*sin(M_PI/2-thC_end);
+
+        double z1slice =Rin -slice_front_jut;
+        double z2slice =Rin +Fdz +Rdz +slice_front_jut;
+        double zheight_slice = (z2slice-z1slice)/2;
+
+        double y1slice =z1slice*tan(M_PI/2-thetaSizeEndcap);
+        double y2slice =z2slice*tan(M_PI/2-thetaSizeEndcap);
+
+        double phi=iPhi*dPhiBarrel;
+
+
+        // Timing layer
+
+        double rT = z1slice -2*nomth;
+        double w  = rT *tan(dPhiBarrel/2);
+        int nTiles= ceil(2*y1slice/w);
+        double lT = 2*y1slice/nTiles;
+        int nCy = floor(lT/nomth);
+        double actY = lT/nCy;
+        double actX = 2*w/nCy; 
+
+        dd4hep::Box timingAssemblyShape(nomth,w,y1slice);
+        dd4hep::Volume timingAssemblyVolume("TimingAssembly", timingAssemblyShape, theDetector.material("Vacuum"));
+        timingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+
+        RotationZYX rotTimingAssembly(0, 0, 0);
+        ROOT::Math::RotationZ rotZPhi = ROOT::Math::RotationZ(phi);
+        rotTimingAssembly = rotZPhi*rotTimingAssembly;
+
+        double rTimingAssembly = rT+nomth;
+        Position dispTimingAssembly(rTimingAssembly*cos(phi),
+                                    rTimingAssembly*sin(phi),
+                                    0);
+
+        scepcalAssemblyVol.placeVolume( timingAssemblyVolume, Transform3D(rotTimingAssembly, dispTimingAssembly) );
+
+        dd4hep::Box timingCrystalTr(nomth/2,w,actY/2);
+        dd4hep::Box timingCrystalLg(nomth/2,actX/2,lT/2);
+        dd4hep::Volume timingCrystalTrVol("TimingCrystalTr", timingCrystalTr, timingTrMat);
+        dd4hep::Volume timingCrystalLgVol("TimingCrystalLg", timingCrystalLg, timingLgMat);
+        timingCrystalTrVol.setVisAttributes(theDetector, timingTrXML.visStr());
+        timingCrystalLgVol.setVisAttributes(theDetector, timingLgXML.visStr());
+
+        for (int nTile=0; nTile<nTiles; nTile++) {
+
+          for (int nC=0; nC<nCy; nC++) {
+
+            int sign = nTile%2==0? 1:-1;
+
+            RotationZYX rotTiming(0, 0, 0);
+
+            Position dispLg(sign*(nomth/2),
+                            -w +actX/2 + nC*actX,
+                            -y1slice +nTile*lT + lT/2
+                            );
+
+            Position dispTr(sign*(-nomth/2),
+                            0,
+                            -y1slice +nTile*lT +actY/2 +nC*actY
+                            );
+
+            auto timingLgId64=segmentation->setVolumeID(1, nTile*nCy +nC , iPhi, 1);
+            auto timingTrId64=segmentation->setVolumeID(1, -nTile*nCy -nC , iPhi, 2);
+            int timingLgId32=segmentation->getFirst32bits(timingLgId64);
+            int timingTrId32=segmentation->getFirst32bits(timingTrId64);
+
+            // Place volumes and ID them
+            dd4hep::PlacedVolume timingLgp = timingAssemblyVolume.placeVolume( timingCrystalLgVol, timingLgId32, Transform3D(rotTiming,dispLg) );
+            dd4hep::PlacedVolume timingTrp = timingAssemblyVolume.placeVolume( timingCrystalTrVol, timingTrId32, Transform3D(rotTiming,dispTr) );
+
+            timingLgp.addPhysVolID("eta", nTile*nCy +nC);
+            timingLgp.addPhysVolID("phi", iPhi);
+            timingLgp.addPhysVolID("depth", 0);
+            timingLgp.addPhysVolID("system", 1);
+            
+            timingTrp.addPhysVolID("eta", -nTile*nCy -nC);
+            timingTrp.addPhysVolID("phi", iPhi);
+            timingTrp.addPhysVolID("depth", 0);
+            timingTrp.addPhysVolID("system", 1);
+          }
+        }
+
         for (int nGamma=0; nGamma<nPhiBarrelCrystal; nGamma++) {
 
           double gamma = -dPhiBarrel/2+dPhiBarrelCrystal/2+dPhiBarrelCrystal*nGamma;
 
           // Make assembly slice
-          double thC_end = thetaSizeEndcap+dThetaBarrel/2;
-
-          double r0slice_end =Rin/sin(thC_end);
-          double y0slice_end =r0slice_end*tan(dThetaBarrel/2.);
-          double slice_front_jut = y0slice_end*sin(M_PI/2-thC_end);
-
-          double z1slice =Rin -slice_front_jut;
-          double z2slice =Rin +Fdz +Rdz +slice_front_jut;
-          double zheight_slice = (z2slice-z1slice)/2;
-
-          double y1slice =z1slice*tan(M_PI/2-thetaSizeEndcap);
-          double y2slice =z2slice*tan(M_PI/2-thetaSizeEndcap);
-
           double x0y0le = z1slice*tan(gamma-dPhiBarrelCrystal/2);
           double x0y0re = z1slice*tan(gamma+dPhiBarrelCrystal/2);
 
@@ -134,10 +212,7 @@ namespace ddSCEPCAL {
           
           dd4hep::EightPointSolid barrelSliceAssemblyShape(zheight_slice,verticesS);
           dd4hep::Volume barrelSliceAssemblyVolume("BarrelSliceAssembly", barrelSliceAssemblyShape, theDetector.material("Vacuum"));
-
           barrelSliceAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
-
-          double phi=iPhi*dPhiBarrel;
 
           RotationZYX rotSlice(0, M_PI/2, 0);
           ROOT::Math::RotationZ rotZSlice = ROOT::Math::RotationZ(phi);
@@ -320,8 +395,8 @@ namespace ddSCEPCAL {
         double y2e=r2e*tan(dThetaEndcap/2.);
 
         // Skip crystals at low theta (near the beampipe) if the crystal face aspect ratio is outside 14% of unity
-        double centerCrystalWidth = RinEndcap*sin(dPhiEndcapCrystal/2);
-        if (abs(1-y0e/centerCrystalWidth)>0.14) continue;
+        // double centerCrystalWidth = RinEndcap*sin(dPhiEndcapCrystal/2);
+        // if (abs(1-y0e/centerCrystalWidth)>0.14) continue;
 
         // Make assembly polyhedra
         double a = r0e/cos(dThetaEndcap/2);

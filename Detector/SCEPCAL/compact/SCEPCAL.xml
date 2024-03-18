@@ -160,8 +160,8 @@
       2.19519*eV 0.122756
       2.21171*eV 0.125678
       2.2193*eV 0.146138
-      2.23619*eV 0.146138
       2.23464*eV 0.160752
+      2.23619*eV 0.146138
       2.24395*eV 0.157829
       2.25806*eV 0.163674
       2.27234*eV 0.184134
@@ -225,9 +225,9 @@
       2.68136*eV 1.31524
       2.68136*eV 1.32985
       2.68359*eV 1.36785
-      2.68805*eV 1.40292
       2.68805*eV 1.39415
       2.68805*eV 1.4
+      2.68805*eV 1.40292
       2.69477*eV 1.41754
       2.69477*eV 1.44092
       2.69702*eV 1.47015
@@ -248,11 +248,11 @@
       2.74979*eV 1.80042
       2.75213*eV 1.8238
       2.75447*eV 1.83549
-      2.75917*eV 1.85303
       2.75682*eV 1.8618
+      2.75917*eV 1.85303
       2.76389*eV 1.87933
-      2.76626*eV 1.89979
       2.76389*eV 1.91733
+      2.76626*eV 1.89979
       2.76626*eV 1.92902
       2.77338*eV 1.95825
       2.77576*eV 1.98163
@@ -284,79 +284,79 @@
       2.90549*eV 1.98455
       2.90811*eV 1.96409
       2.91073*eV 1.94948
-      2.91335*eV 1.93194
-      2.91335*eV 1.91733
       2.91335*eV 1.90271
+      2.91335*eV 1.91733
+      2.91335*eV 1.93194
       2.91861*eV 1.87641
-      2.92125*eV 1.86472
       2.92125*eV 1.8501
+      2.92125*eV 1.86472
       2.92389*eV 1.83841
-      2.92654*eV 1.82088
       2.92654*eV 1.79749
-      2.92919*eV 1.77119
+      2.92654*eV 1.82088
       2.92919*eV 1.75073
+      2.92919*eV 1.77119
       2.93185*eV 1.73027
       2.93451*eV 1.70689
       2.93717*eV 1.68058
       2.93985*eV 1.65428
       2.94252*eV 1.6309
       2.9452*eV 1.60167
-      2.94789*eV 1.57244
-      2.94789*eV 1.55491
       2.94789*eV 1.53152
+      2.94789*eV 1.55491
+      2.94789*eV 1.57244
       2.95058*eV 1.50522
       2.95868*eV 1.47891
       2.96411*eV 1.45261
-      2.96955*eV 1.43215
-      2.97228*eV 1.40877
-      2.97228*eV 1.38831
       2.96955*eV 1.362
+      2.96955*eV 1.43215
       2.97228*eV 1.33862
+      2.97228*eV 1.38831
+      2.97228*eV 1.40877
+      2.97502*eV 1.27432
       2.97502*eV 1.31232
       2.97776*eV 1.28601
-      2.97502*eV 1.27432
-      2.9805*eV 1.25678
-      2.9805*eV 1.21587
       2.9805*eV 1.19541
+      2.9805*eV 1.21587
+      2.9805*eV 1.25678
       2.98601*eV 1.17203
       2.99154*eV 1.14864
-      2.99431*eV 1.12234
-      2.99431*eV 1.10772
-      2.99708*eV 1.08434
       2.99431*eV 1.06096
+      2.99431*eV 1.10772
+      2.99431*eV 1.12234
       2.99708*eV 1.0142
+      2.99708*eV 1.08434
       3.00544*eV 0.987891
-      3.00824*eV 0.967432
-      3.00824*eV 0.938205
-      3.00824*eV 0.9119
       3.00824*eV 0.879749
+      3.00824*eV 0.9119
+      3.00824*eV 0.938205
+      3.00824*eV 0.967432
       3.01385*eV 0.853445
       3.0223*eV 0.82714
-      3.02797*eV 0.786221
-      3.03081*eV 0.765762
       3.02797*eV 0.739457
-      3.03365*eV 0.716075
-      3.03081*eV 0.681002
+      3.02797*eV 0.786221
       3.03081*eV 0.660543
+      3.03081*eV 0.681002
+      3.03081*eV 0.765762
+      3.03365*eV 0.716075
       3.0365*eV 0.637161
       3.03935*eV 0.60501
       3.04221*eV 0.581628
-      3.04795*eV 0.552401
       3.04795*eV 0.531942
+      3.04795*eV 0.552401
       3.05083*eV 0.505637
       3.05371*eV 0.485177
       3.05949*eV 0.458873
       3.06239*eV 0.435491
-      3.06529*eV 0.412109
-      3.0682*eV 0.379958
       3.06529*eV 0.356576
-      3.07112*eV 0.336117
+      3.06529*eV 0.412109
       3.0682*eV 0.309812
+      3.0682*eV 0.379958
+      3.07112*eV 0.336117
       3.07696*eV 0.280585
       3.08283*eV 0.25428
-      3.0976*eV 0.207516
-      3.09464*eV 0.175365
       3.09464*eV 0.157829
+      3.09464*eV 0.175365
+      3.0976*eV 0.207516
       3.10653*eV 0.13737
       3.11252*eV 0.119833
       3.11852*eV 0.0993737
@@ -937,12 +937,13 @@
   </materials>
 
   <display>
-    <vis name="crystalFVis"  alpha="1" r="0.0"  g="0.0"  b="1.0"  showDaughters="true"  visible="true"/>
-    <vis name="crystalRVis"  alpha="1" r="0.0"  g="0.5"  b="1.0"  showDaughters="true"  visible="true"/>
-    <vis name="timingVis"    alpha="1" r="0.0"  g="1.0"  b="0.0"  showDaughters="true"  visible="true"/>
+    <vis name="crystalFVis"  alpha="1"   r="0.0"  g="0.0"  b="1.0"  showDaughters="true"  visible="true"/>
+    <vis name="crystalRVis"  alpha="1"   r="0.0"  g="0.5"  b="1.0"  showDaughters="true"  visible="true"/>
+    <vis name="timingVisTr"  alpha="0.7" r="0.0"  g="0.7"  b="0.1"  showDaughters="true"  visible="true"/>
+    <vis name="timingVisLg"  alpha="0.7" r="0.0"  g="0.3"  b="0.1"  showDaughters="true"  visible="true"/>
     <vis name="instVis"      alpha="1.0" r="0.1"  g="0.1"  b="0.1"  showDaughters="true"  visible="true"/>
 
-    <vis name="scepcalAssemblyVis"  alpha="0.5" r="0.3"  g="0.2"  b="0.2"  showDaughters="true"  visible="true"/>
+    <vis name="scepcalAssemblyVis"  alpha="0.1" r="0.3"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
     <vis name="scepcalAssemblyGlobalVis"  alpha="0.1" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
 
   </display>
@@ -953,11 +954,12 @@
 
       <sensitive type="tracker"/>
 
-      <dim    barrelHalfZ="2.25*m" barrelInnerR="2*m" crystalFaceWidthNominal="100*mm"/>
+      <dim    barrelHalfZ="2.25*m" barrelInnerR="2*m" crystalFaceWidthNominal="50*mm" crystalTimingThicknessNominal="10*mm"/>
 
       <crystalF       length="50*mm"      material="PbWO"          vis="crystalFVis"/>
       <crystalR       length="150*mm"     material="PbWO"          vis="crystalRVis"/>
-      <timingLayer                        material="LYSO"          vis="timingVis"/>
+      <timingLayerTr                      material="LYSO"          vis="timingVisTr"/>
+      <timingLayerLg                      material="LYSO"          vis="timingVisLg"/>
       <inst                               material="AluminumOxide" vis="instVis"/>
 
       <scepcalAssembly vis="scepcalAssemblyVis"/>
