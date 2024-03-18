@@ -152,16 +152,17 @@ namespace ddSCEPCAL {
 
           for (int nC=0; nC<nCy; nC++) {
 
-            int sign = nTile%2==0? 1:-1;
+            int phiSign =  iPhi%2==0? 1:-1;
+            int sign    = nTile%2==0? 1:-1;
 
             RotationZYX rotTiming(0, 0, 0);
 
-            Position dispLg(sign*(nomth/2),
+            Position dispLg(sign*phiSign*(nomth/2),
                             -w +actX/2 + nC*actX,
                             -y1slice +nTile*lT + lT/2
                             );
 
-            Position dispTr(sign*(-nomth/2),
+            Position dispTr(sign*phiSign*(-nomth/2),
                             0,
                             -y1slice +nTile*lT +actY/2 +nC*actY
                             );
