@@ -120,7 +120,7 @@ namespace ddSCEPCAL {
 
         double rT = z1slice -2*nomth;
         double w  = rT *tan(dPhiBarrel/2);
-        int nTiles= ceil(2*y1slice/w);
+        int nTiles= ceil(y1slice/w);
         double lT = 2*y1slice/nTiles;
         int nCy = floor(lT/nomth);
         double actY = lT/nCy;
