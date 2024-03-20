@@ -93,11 +93,8 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
 
         double z1slice =Rin -slice_front_jut;
         double z2slice =Rin +Fdz +Rdz +slice_front_jut;
-        double zheight_slice = (z2slice-z1slice)/2;
 
         double y1slice =z1slice*tan(M_PI/2-thetaSizeEndcap);
-        double y2slice =z2slice*tan(M_PI/2-thetaSizeEndcap);
-
 
         // Timing layer
         if (nDepth_in==0) {
@@ -113,7 +110,7 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
             double actX = 2*w/nCy; 
 
             double rTimingAssembly = rT+nomth;
-            Vector3D dispTimingAssembly(rTimingAssembly*cos(phi),
+            ROOT::Math::XYZVector dispTimingAssembly(rTimingAssembly*cos(phi),
                                         rTimingAssembly*sin(phi),
                                         0);
 
@@ -123,20 +120,22 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
             int phiSign =    nPhi_in%2==0? 1:-1;
             int sign    = abs(nTile)%2==0? 1:-1;
 
+            ROOT::Math::RotationZ rotZ(phi);
+
             if (nTile>0) {
-                Vector3D dispLg(sign*phiSign*(nomth/2),
+                ROOT::Math::XYZVector dispLg(sign*phiSign*(nomth/2),
                                 -w +actX/2 + abs(nC)*actX,
                                 -y1slice +abs(nTile)*lT + lT/2
                                 );
-                fPositionOf.emplace(copyNum,dispTimingAssembly+dispLg.RotateZ(phi));
+                fPositionOf.emplace(copyNum,dispTimingAssembly+rotZ*dispLg);
                 
             }
             else if (nTile<0) {
-                Vector3D dispTr(sign*phiSign*(-nomth/2),
+                ROOT::Math::XYZVector dispTr(sign*phiSign*(-nomth/2),
                                 0,
                                 -y1slice +abs(nTile)*lT +actY/2 +abs(nC)*actY
                                 );
-                fPositionOf.emplace(copyNum,dispTimingAssembly+dispTr.RotateZ(phi));
+                fPositionOf.emplace(copyNum,dispTimingAssembly+rotZ*dispTr);
             }
         }
 
@@ -152,9 +151,6 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
             double r0e=RinEndcap/sin(thC);
             double r1e=r0e+Fdz;
 
-            double y0e=r0e*tan(dThetaEndcap/2.);
-            double y1e=r1e*tan(dThetaEndcap/2.);
-
             int nPhi   = int(nPhi_in/nPhiEndcapCrystal);
             int nGamma = nPhi_in%nPhiEndcapCrystal;
 
@@ -162,24 +158,26 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
             double gamma = -dPhiEndcap/2+dPhiEndcapCrystal/2+dPhiEndcapCrystal*nGamma;
             
             int mirror = nEta_in<nThetaEndcap? 0:1;
-            Vector3D rotMirror(0, M_PI*mirror, 0);
+
+            ROOT::Math::RotationZ rotZ(phi);
+            ROOT::Math::RotationY rotY(M_PI*mirror);
 
             if (nDepth_in==1) {
                 double rF=r0e+Fdz/2.;
-                Vector3D dispGamma(0, rF*sin(thC)*tan(gamma), 0);
-                Vector3D dispF(rF*sin(thC)*cos(phi),
+                ROOT::Math::XYZVector dispGamma(0, rF*sin(thC)*tan(gamma), 0);
+                ROOT::Math::XYZVector dispF(rF*sin(thC)*cos(phi),
                             rF*sin(thC)*sin(phi),
                             rF*cos(thC));
-                fPositionOf.emplace(copyNum, (dispF+dispGamma.RotateZ(phi)).RotateY(rotMirror) );
+                fPositionOf.emplace(copyNum, rotY*(dispF+rotZ*dispGamma) );
             }
 
             else if (nDepth_in==2) {
                 double rR=r1e+Rdz/2.;
-                Vector3D dispGamma(0, rR*sin(thC)*tan(gamma), 0);
-                Vector3D dispR(rR*sin(thC)*cos(phi),
+                ROOT::Math::XYZVector dispGamma(0, rR*sin(thC)*tan(gamma), 0);
+                ROOT::Math::XYZVector dispR(rR*sin(thC)*cos(phi),
                             rR*sin(thC)*sin(phi),
                             rR*cos(thC));
-                fPositionOf.emplace(copyNum, (dispR+dispGamma.RotateZ(phi)).RotateY(rotMirror) );
+                fPositionOf.emplace(copyNum, rotY*(dispR+rotZ*dispGamma) );
             }
         }
 
@@ -198,32 +196,31 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
             double r0e=Rin/sin(thC);
             double r1e=r0e+Fdz;
 
-            double y0e=r0e*tan(dThetaBarrel/2.);
-            double y1e=r1e*tan(dThetaBarrel/2.);
-
             double rSlice =(z1slice+z2slice)/2;
             Position dispSlice(rSlice*cos(phi),
                                rSlice*sin(phi),
                                0);
 
+            ROOT::Math::RotationZ rotZ(phi);
+
             if (nDepth_in==1) {
                 double rF=r0e+Fdz/2.;
-                Vector3D dispF(
+                ROOT::Math::XYZVector dispF(
                               rF*sin(thC)-rSlice,
                               rF*sin(thC)*tan(gamma),
                               rF*cos(thC)
                           );
-                fPositionOf.emplace(copyNum, dispSlice+ dispF.RotateZ(phi) );
+                fPositionOf.emplace(copyNum, dispSlice+ rotZ*dispF );
             }
 
             else if (nDepth_in==2) {
                 double rR=r1e+Rdz/2.;
-                Vector3D dispR(
+                ROOT::Math::XYZVector dispR(
                               rR*sin(thC)-rSlice,
                               rR*sin(thC)*tan(gamma),
                               rR*cos(thC)
                           );
-                fPositionOf.emplace(copyNum, dispSlice+ dispR.RotateZ(phi) );
+                fPositionOf.emplace(copyNum, dispSlice+ rotZ*dispR );
             }
         }
 
@@ -257,15 +254,54 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         //std::cout << "... phi   :: " << phi <<  "and  R :: " << R <<  "... finally cos(phi),sin(phi) :: " << cos(phi) << "," <<  sin(phi) << std::endl;
         //std::cout << "to get  z=R*cos(theta)= " << z << " and y=R*sin(theta)*sin(phi)= " << y <<  " and x=R*sin(theta)*cos(phi)= " << x << std::endl;
 
-        // Vector3D position(x, y, z);
+        // ROOT::Math::XYZVector position(x, y, z);
         // fPositionOf.emplace(copyNum,position);
+
+
+        // To test positions in detector constructor
+
+        // int nEta_in = nTile*nCy +nC;
+
+        // int nTilet = int(nEta_in/nCy);
+        // int nCt = nEta_in - nTilet*nCy;
+
+        // int phiSignt =    iPhi%2==0? 1:-1;
+        // int signt    = abs(nTilet)%2==0? 1:-1;
+
+        // ROOT::Math::RotationZ rotPhi(phi);
+
+        // Position dispLgt(signt*phiSignt*(nomth/2),
+        //                 -w +actX/2 + abs(nCt)*actX,
+        //                 -y1slice +abs(nTilet)*lT + lT/2
+        //                 );
+
+        // dd4hep::Box testBox(nomth, nomth, nomth);
+        // dd4hep::Volume testBoxVol("BarrelCrystalF", testBox, timingLgMat);
+        // testBoxVol.setVisAttributes(theDetector, timingLgXML.visStr());
+        // dd4hep::PlacedVolume timingLgp = scepcalAssemblyVol.placeVolume( testBoxVol, timingLgId32,  dispTimingAssembly+rotPhi*dispLgt );
+
+
+
+        // Position dispGamma(0, rF*sin(thC)*tan(gamma), 0);
+        // Position dispFt(rF*sin(thC)*cos(phi),
+        //             rF*sin(thC)*sin(phi),
+        //             rF*cos(thC));
+
+        // ROOT::Math::RotationZ rotPhi(phi);
+        // ROOT::Math::RotationY rotY(M_PI*0);
+
+        // dd4hep::Box testBox(Fdz/2, Fdz/2, Fdz/2);
+        // dd4hep::Volume testBoxVol("BarrelCrystalF", testBox, crystalFMat);
+        // testBoxVol.setVisAttributes(theDetector, crystalFXML.visStr());
+        // dd4hep::PlacedVolume crystalFp = scepcalAssemblyVol.placeVolume( testBoxVol, crystalFId32,  rotY*(dispFt+rotPhi*dispGamma) );
+
     }
 
     return fPositionOf.at(copyNum);
 }
 
 /*
-Vector3D SCEPCALSegmentation::localPosition(const CellID& cID) const {
+ROOT::Math::XYZVector SCEPCALSegmentation::localPosition(const CellID& cID) const {
     int numx = numX(cID);
     int numy = numY(cID);
     int numz = numZ(cID);
