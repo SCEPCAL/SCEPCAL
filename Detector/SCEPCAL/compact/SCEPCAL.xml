@@ -27,8 +27,7 @@
   <readouts>
     <readout name="SCEPCALreadout">
       <segmentation type="SCEPCALSegmentation"/>
-      <!-- Mendatory to use the first 32 bits for tower infos & the last 32 bits for fiber/SiPM infos -->
-      <id>system:5,eta:-11,phi:12,depth:3,sipm:3,c:1,module:3</id>
+      <id>system:5,eta:-11,phi:12,depth:3</id>
     </readout>
   </readouts>
 
@@ -950,11 +949,16 @@
 
   <detectors>
 
-    <detector id="2" name="ECalBarrel" type="SCEPCAL" readout="SCEPCALreadout" vis="Invisible">
+    <detector id="2" name="Scepcal" type="SCEPCAL" readout="SCEPCALreadout" vis="Invisible" sensitive="true">
 
-      <sensitive type="tracker"/>
+      <sensitive type="ScepcalSD"/>
 
-      <dim    barrelHalfZ="2.25*m" barrelInnerR="2*m" crystalFaceWidthNominal="50*mm" crystalTimingThicknessNominal="10*mm"/>
+      <dim    barrelHalfZ="2.25*m"
+              barrelInnerR="2*m" 
+              crystalFaceWidthNominal="50*mm" 
+              crystalTimingThicknessNominal="50*mm"
+              phiSegments="16"
+      />
 
       <crystalF       length="50*mm"      material="PbWO"          vis="crystalFVis"/>
       <crystalR       length="150*mm"     material="PbWO"          vis="crystalRVis"/>

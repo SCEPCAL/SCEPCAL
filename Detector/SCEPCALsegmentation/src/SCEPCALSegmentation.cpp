@@ -16,9 +16,6 @@ SCEPCALSegmentation::SCEPCALSegmentation(const std::string& cellEncoding) : Segm
     registerIdentifier("identifier_eta", "Cell ID identifier for numEta", fEtaId, "eta");
     registerIdentifier("identifier_phi", "Cell ID identifier for numPhi", fPhiId, "phi");
     registerIdentifier("identifier_depth", "Cell ID identifier for numDepth", fDepthId, "depth");
-    registerIdentifier("identifier_sipm", "Cell ID identifier for numSipm", fSipmId, "sipm");
-    registerIdentifier("identifier_IsCerenkov", "Cell ID identifier for IsCerenkov", fIsCerenkovId, "c");
-    registerIdentifier("identifier_module", "Cell ID identifier for module", fModule, "module");
 }
 
 SCEPCALSegmentation::SCEPCALSegmentation(const BitFieldCoder* decoder) : Segmentation(decoder) {
@@ -29,9 +26,6 @@ SCEPCALSegmentation::SCEPCALSegmentation(const BitFieldCoder* decoder) : Segment
     registerIdentifier("identifier_eta", "Cell ID identifier for Eta", fEtaId, "eta");
     registerIdentifier("identifier_phi", "Cell ID identifier for Phi", fPhiId, "phi");
     registerIdentifier("identifier_depth", "Cell ID identifier for Depth", fDepthId, "depth");
-    registerIdentifier("identifier_sipm", "Cell ID identifier for Sipm", fSipmId, "sipm");
-    registerIdentifier("identifier_IsCerenkov", "Cell ID identifier for IsCerenkov", fIsCerenkovId, "c");
-    registerIdentifier("identifier_module", "Cell ID identifier for module", fModule, "module");
 }
 
 SCEPCALSegmentation::~SCEPCALSegmentation() {}
@@ -44,6 +38,24 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
 
     int copyNum = (int)cID;
 
+    // // now in mm
+    // double Fdz= f_Fdz; // getFdz();
+    // double Rdz= f_Rdz; // getRdz();
+    // double nomfw= f_nomfw; // getnomfw();
+    // double nomth= f_nomth; // getnomth();
+    // double EBz= f_EBz; // getEBz();
+    // double Rin= f_Rin; // getRin();
+    // int phiSegments= f_phiSegments; // getphiSegments();
+
+    // now in mm
+    double Fdz= getFdz();
+    double Rdz= getRdz();
+    double nomfw= getnomfw();
+    double nomth= getnomth();
+    double EBz= getEBz();
+    double Rin= getRin();
+    int phiSegments= getphiSegments();
+
     if (fPositionOf.count(copyNum) == 0) { //Add if not found
         //int system=(copyNum)&(32-1);
         //int nEta_in=(copyNum>>5)&(1024-1);
@@ -55,13 +67,7 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         int nPhi_in=Phi(copyNum);
         int nDepth_in=Depth(copyNum);
 
-        // now in mm
-        double Fdz=50;
-        double Rdz=150;
-        double nomfw=50;
-        double nomth=10;
-        double EBz=2250;
-        double Rin=2000;
+        if (system==3) return Vector3D(0,0,0);
 
         // Begin geometry calculations
 
@@ -74,7 +80,7 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         double dThetaBarrel =(M_PI-2*thetaSizeEndcap)/(nThetaBarrel);
         double dThetaEndcap =thetaSizeEndcap/nThetaEndcap;
 
-        int    nPhiBarrel = 16;
+        int    nPhiBarrel = phiSegments;
         double dPhiBarrel = 2*M_PI/nPhiBarrel;
 
         int    nPhiEndcap = nPhiBarrel;
@@ -82,7 +88,6 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         
         int    nPhiBarrelCrystal   =floor(2*M_PI*Rin/(nPhiBarrel*nomfw));
         double dPhiBarrelCrystal   =dPhiBarrel/nPhiBarrelCrystal;
-
 
         // Shared calculations for timing layer and barrel envelopes
         double thC_end = thetaSizeEndcap+dThetaBarrel/2;
@@ -224,6 +229,7 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
             }
         }
 
+/**
         // nTheta always positive, so that thC is going from 0 to pi.
         // [0,pi/2) --> z, eta positive ; (pi/2,pi] --> z,eta negative; pi/2 (cos(theta) = 0) is excluded
         // int nTheta = (nThetaBarrel+nThetaEndcap)-nEta_in;
@@ -280,8 +286,6 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         // testBoxVol.setVisAttributes(theDetector, timingLgXML.visStr());
         // dd4hep::PlacedVolume timingLgp = scepcalAssemblyVol.placeVolume( testBoxVol, timingLgId32,  dispTimingAssembly+rotPhi*dispLgt );
 
-
-
         // Position dispGamma(0, rF*sin(thC)*tan(gamma), 0);
         // Position dispFt(rF*sin(thC)*cos(phi),
         //             rF*sin(thC)*sin(phi),
@@ -295,33 +299,16 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         // testBoxVol.setVisAttributes(theDetector, crystalFXML.visStr());
         // dd4hep::PlacedVolume crystalFp = scepcalAssemblyVol.placeVolume( testBoxVol, crystalFId32,  rotY*(dispFt+rotPhi*dispGamma) );
 
+**/
     }
 
     return fPositionOf.at(copyNum);
 }
 
-/*
-ROOT::Math::XYZVector SCEPCALSegmentation::localPosition(const CellID& cID) const {
-    int numx = numX(cID);
-    int numy = numY(cID);
-    int numz = numZ(cID);
-    int x_ = x(cID);
-    int y_ = y(cID);
-    int z_ = z(cID);
 
-    return localPosition(numx,numy,numz,x_,y_,z_);
-}
-
-Vector3D SCEPCALSegmentation::localPosition(int numx, int numy, int numz, int x_, int y_, int z_) const {
-    float ptX = -fGridSize*static_cast<float>(numx/2) + static_cast<float>(x_)*fGridSize + ( numx%2==0 ? fGridSize/2. : 0. );
-    float ptY = -fGridSize*static_cast<float>(numy/2) + static_cast<float>(y_)*fGridSize + ( numy%2==0 ? fGridSize/2. : 0. );
-    float ptZ = -fGridSize*static_cast<float>(numz/2) + static_cast<float>(z_)*fGridSize + ( numz%2==0 ? fGridSize/2. : 0. );
-
-    return Vector3D(ptX,ptY,ptZ);
-}
-*/
-
-CellID SCEPCALSegmentation::cellID(const Vector3D& /*localPosition*/, const Vector3D& /*globalPosition*/, const VolumeID& vID) const {
+CellID SCEPCALSegmentation::cellID(const Vector3D& /*localPosition*/, 
+                                   const Vector3D& /*globalPosition*/, 
+                                   const VolumeID& vID) const {
     return setCellID(System(vID), Eta(vID), Phi(vID), Depth(vID) );
 }
 
@@ -342,9 +329,6 @@ VolumeID SCEPCALSegmentation::setVolumeID(int System, int Eta, int Phi, int Dept
     _decoder->set(vID, fPhiId, PhiId);
     _decoder->set(vID, fDepthId, DepthId);
 
-    VolumeID module = 0; // Tower
-    _decoder->set(vID, fModule, module);
-
     return vID;
 }
 
@@ -364,12 +348,6 @@ CellID SCEPCALSegmentation::setCellID(int System, int Eta, int Phi, int Depth) c
     _decoder->set(vID, fEtaId, EtaId);
     _decoder->set(vID, fPhiId, PhiId);
     _decoder->set(vID, fDepthId, DepthId);
-
-    VolumeID module = 1; // Fiber, SiPM, etc.
-    _decoder->set(vID, fModule, module);
-
-    VolumeID isCeren = IsCerenkov(Eta,Phi) ? 1 : 0;
-    _decoder->set(vID, fIsCerenkovId, isCeren);
 
     return vID;
 }
@@ -394,33 +372,6 @@ int SCEPCALSegmentation::Depth(const CellID& aCellID) const {
     return static_cast<int>(Depth);
 }
 
-int SCEPCALSegmentation::Sipm(const CellID& aCellID) const {
-    VolumeID Sipm = static_cast<VolumeID>(_decoder->get(aCellID, fSipmId));
-    return static_cast<int>(Sipm);
-}
-
-bool SCEPCALSegmentation::IsCerenkov(const CellID& aCellID) const {
-    VolumeID isCeren = static_cast<VolumeID>(_decoder->get(aCellID, fIsCerenkovId));
-    return static_cast<bool>(isCeren);
-}
-
-bool SCEPCALSegmentation::IsCerenkov(int eta, int phi) const {
-    bool isCeren = false;
-    if ( eta%2 == 1 ) { isCeren = !isCeren; }
-    if ( phi%2 == 1 ) { isCeren = !isCeren; }
-    return isCeren;
-}
-
-bool SCEPCALSegmentation::IsTower(const CellID& aCellID) const {
-    VolumeID module = static_cast<VolumeID>(_decoder->get(aCellID, fModule));
-    return module==0;
-}
-
-bool SCEPCALSegmentation::IsSiPM(const CellID& aCellID) const {
-    VolumeID module = static_cast<VolumeID>(_decoder->get(aCellID, fModule));
-    return module==1;
-}
-
 int SCEPCALSegmentation::getLast32bits(const CellID& aCellID) const {
     CellID aId64 = aCellID >> sizeof(int)*CHAR_BIT;
     int aId32 = (int)aId64;
@@ -432,28 +383,6 @@ CellID SCEPCALSegmentation::convertLast32to64(const int aId32) const {
     aId64 <<= sizeof(int)*CHAR_BIT;
     return aId64;
 }
-
-/*        
-DRparamBase* SCEPCALSegmentation::setParamBase(int noEta) const {
-    DRparamBase* paramBase = nullptr;
-
-    if ( fParamEndcap->unsignedTowerNo(noEta) >= fParamBarrel->GetTotTowerNum() ) paramBase = static_cast<DRparamBase*>(fParamEndcap);
-    else paramBase = static_cast<DRparamBase*>(fParamBarrel);
-
-    if ( paramBase->GetCurrentTowerNum()==noEta ) return paramBase;
-
-    // This should not be called while building detector geometry
-    if (!paramBase->IsFinalized()) throw std::runtime_error("SCEPCALSegmentation::position should not be called while building detector geometry!");
-
-    paramBase->SetDeltaThetaByTowerNo(noEta, fParamBarrel->GetTotTowerNum());
-    paramBase->SetThetaOfCenterByTowerNo(noEta, fParamBarrel->GetTotTowerNum());
-    paramBase->SetIsRHSByTowerNo(noEta);
-    paramBase->SetCurrentTowerNum(noEta);
-    paramBase->init();
-
-    return paramBase;
-}
-*/
 
 }
 }
