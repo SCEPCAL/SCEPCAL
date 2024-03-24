@@ -1,4 +1,17 @@
+*.stdhep
+*.slcio
+*.log
 .idea
 build.nix
 *.root
 result
+build
+install
+edm4dr/src
+edm4dr/edm4hep
+edm4dr/podio_generated_files.cmake
+images
+.ipynb_checkpoints
+logging
+output
+samples

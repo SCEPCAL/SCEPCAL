@@ -1048,13 +1048,13 @@
 
       <endcap construct="true" reflect="true" 
         phistart="0" phiend="32" 
-        thetastart="15"
+        thetastart="5"
       />
 
       <dim    barrelHalfZ="2.25*m"
               barrelInnerR="2*m" 
-              crystalFaceWidthNominal="10*mm" 
-              crystalTimingThicknessNominal="10*mm"
+              crystalFaceWidthNominal="100*mm" 
+              crystalTimingThicknessNominal="100*mm"
               phiSegments="32"
       />
 
@@ -1093,8 +1093,8 @@
 
       <dim    barrelHalfZ="2.25*m"
               barrelInnerR="2*m" 
-              crystalFaceWidthNominal="10*mm" 
-              crystalTimingThicknessNominal="10*mm"
+              crystalFaceWidthNominal="100*mm" 
+              crystalTimingThicknessNominal="100*mm"
               phiSegments="32"
       />
 

@@ -10,602 +10,762 @@
 #include "DD4hep/DetectorTools.h"
 #include "DD4hep/Printout.h"
 #include "DD4hep/Detector.h"
+#include "DDRec/DetectorData.h"
 
 #include "TGeoTrd2.h"
 #include <bitset>
 
 using dd4hep::Transform3D;
 using dd4hep::RotationZYX;
+using dd4hep::RotationY;
+using ROOT::Math::RotationZ;
 using dd4hep::Rotation3D;
 using dd4hep::Position;
-//using dd4hep::PlacedVolume::VolIDs;
+using dd4hep::rec::LayeredCalorimeterData;
 
-namespace ddSCEPCAL {
-    static dd4hep::Ref_t
-    create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::SensitiveDetector sensDet) {
+static dd4hep::Ref_t
+create_detector_BE(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::SensitiveDetector sens) {
 
-      // Initialize detector element
-      xml_det_t detectorXML=xmlElement;
-      std::string name=detectorXML.nameStr();
-      dd4hep::DetElement drDet(name, detectorXML.id());
+  // Import xml objects from compact xml
+  xml_det_t detectorXML                   = xmlElement;
+  xml_comp_t dimXML                       = detectorXML.child(_Unicode(dim));
+  xml_comp_t barrelXML                    = detectorXML.child(_Unicode(barrel));
+  xml_comp_t endcapXML                    = detectorXML.child(_Unicode(endcap));
+  xml_comp_t crystalFXML                  = detectorXML.child(_Unicode(crystalF));
+  xml_comp_t crystalRXML                  = detectorXML.child(_Unicode(crystalR));
+  xml_comp_t timingTrXML                  = detectorXML.child(_Unicode(timingLayerTr));
+  xml_comp_t timingLgXML                  = detectorXML.child(_Unicode(timingLayerLg));
+  xml_comp_t instXML                      = detectorXML.child(_Unicode(inst));
+  xml_comp_t scepcalAssemblyGlobalVisXML  = detectorXML.child(_Unicode(scepcalAssemblyGlobalVis));
+  xml_comp_t scepcalAssemblyXML           = detectorXML.child(_Unicode(scepcalAssembly));
+  xml_comp_t printDebugXML                = detectorXML.child(_Unicode(printDebug));
 
-      // Import xml objects from compact xml
-      dd4hep::xml::Dimension sensDetType=detectorXML.child(_Unicode(sensitive));
-      xml_comp_t dimXML=detectorXML.child(_Unicode(dim));
-      xml_comp_t crystalFXML=detectorXML.child(_Unicode(crystalF));
-      xml_comp_t crystalRXML=detectorXML.child(_Unicode(crystalR));
-      xml_comp_t timingTrXML=detectorXML.child(_Unicode(timingLayerTr));
-      xml_comp_t timingLgXML=detectorXML.child(_Unicode(timingLayerLg));
-      xml_comp_t instXML=detectorXML.child(_Unicode(inst));
-      xml_comp_t scepcalAssemblyGlobalVisXML=detectorXML.child(_Unicode(scepcalAssemblyGlobalVis));
-      xml_comp_t scepcalAssemblyXML=detectorXML.child(_Unicode(scepcalAssembly));
+  // Material definitions
+  dd4hep::Material crystalFMat = theDetector.material(crystalFXML.materialStr());
+  dd4hep::Material crystalRMat = theDetector.material(crystalRXML.materialStr());
+  dd4hep::Material timingTrMat = theDetector.material(timingTrXML.materialStr());
+  dd4hep::Material timingLgMat = theDetector.material(timingLgXML.materialStr());
+  dd4hep::Material instMat     = theDetector.material(instXML.materialStr());
 
-      xml_comp_t printDebugXML=detectorXML.child(_Unicode(printDebug));
+  // Parse input parameters from imported xml objects
+  const int  debugLevel = printDebugXML.attr<int>(_Unicode(level));
 
-      //-----------------------------------------------------------------------------------
+  const double Fdz      = crystalFXML.attr<double>(_Unicode(length));
+  const double Rdz      = crystalRXML.attr<double>(_Unicode(length));
+  const double nomfw    = dimXML.attr<double>(_Unicode(crystalFaceWidthNominal));
+  const double nomth    = dimXML.attr<double>(_Unicode(crystalTimingThicknessNominal));
+  const double EBz      = dimXML.attr<double>(_Unicode(barrelHalfZ));
+  const double Rin      = dimXML.attr<double>(_Unicode(barrelInnerR));
 
-      sensDet.setType(sensDetType.typeStr());
+  const int     PHI_SEGMENTS       = dimXML.attr<int>(_Unicode(phiSegments));
+  const bool    REFLECT_ENDCAP     = endcapXML.attr<bool>(_Unicode(reflect));
 
-      // Set the segmentation class
-      auto segmentation=dynamic_cast<dd4hep::DDSegmentation::SCEPCALSegmentation *>( sensDet.readout().segmentation().segmentation());
+  const bool    CONSTRUCT_BARREL   = barrelXML.attr<bool>(_Unicode(construct));
+  const int     BARREL_PHI_START   = barrelXML.attr<int>(_Unicode(phistart));
+  const int     BARREL_PHI_END     = barrelXML.attr<int>(_Unicode(phiend));
 
-      dd4hep::Assembly experimentalHall("hall");
+  const bool    CONSTRUCT_ENDCAP   = endcapXML.attr<bool>(_Unicode(construct));
+  const int     ENDCAP_PHI_START   = endcapXML.attr<int>(_Unicode(phistart));
+  const int     ENDCAP_PHI_END     = endcapXML.attr<int>(_Unicode(phiend));
+  const int     ENDCAP_THETA_START = endcapXML.attr<int>(_Unicode(thetastart));
 
-      const int  debugLevel = printDebugXML.attr<bool>(_Unicode(level));
+  //-----------------------------------------------------------------------------------
+  // Global geometry numbers
+  //-----------------------------------------------------------------------------------
 
-      // Parse input parameters from imported xml objects
-      const double Fdz    =crystalFXML.attr<double>(_Unicode(length));
-      const double Rdz    =crystalRXML.attr<double>(_Unicode(length));
-      const double nomfw  =dimXML.attr<double>(_Unicode(crystalFaceWidthNominal));
-      const double nomth  =dimXML.attr<double>(_Unicode(crystalTimingThicknessNominal));
-      const double EBz    =dimXML.attr<double>(_Unicode(barrelHalfZ));
-      const double Rin    =dimXML.attr<double>(_Unicode(barrelInnerR));
+  const double  D_PHI_GLOBAL    = 2*M_PI/PHI_SEGMENTS;
 
-      // Material definitions
-      dd4hep::Material crystalFMat =theDetector.material(crystalFXML.materialStr());
-      dd4hep::Material crystalRMat =theDetector.material(crystalRXML.materialStr());
-      dd4hep::Material timingTrMat =theDetector.material(timingTrXML.materialStr());
-      dd4hep::Material timingLgMat =theDetector.material(timingLgXML.materialStr());
-      dd4hep::Material instMat     =theDetector.material(instXML.materialStr());
+  // Need odd number of N_THETA_BARREL to make center slice
+  double  THETA_SIZE_ENDCAP     = atan(Rin/EBz);
 
-      // Begin geometry calculations
+  int     N_THETA_BARREL        = int(floor(2*EBz/nomfw))%2==1? floor(2*EBz/nomfw) : floor(2*EBz/nomfw)-1 ;
+  int     N_THETA_ENDCAP        = floor(Rin/nomfw);
+  
+  double  D_THETA_BARREL        = (M_PI-2*THETA_SIZE_ENDCAP)/(N_THETA_BARREL);
+  double  D_THETA_ENDCAP        = THETA_SIZE_ENDCAP/N_THETA_ENDCAP;
 
-      bool ReflectEndcap = false;
+  int     N_PHI_BARREL_CRYSTAL  = floor(2*M_PI*Rin/(PHI_SEGMENTS*nomfw));
+  double  D_PHI_BARREL_CRYSTAL  = D_PHI_GLOBAL/N_PHI_BARREL_CRYSTAL;
 
-      // Need odd number of nThetaBarrel to make center crystal
-      int nThetaBarrel  =int(floor(2*EBz/nomfw))%2==1? floor(2*EBz/nomfw) : floor(2*EBz/nomfw)-1 ;
-      int nThetaEndcap  =floor(Rin/nomfw);
 
-      double thetaSizeEndcap=atan(Rin/EBz);
+  std::cout << std::endl;
+  std::cout << "==BARREL AND ENDCAP==" << std::endl;
+  std::cout << "GEOMETRY INPUTS:" << std::endl;
+  std::cout << "CONSTRUCT_BARREL:   " << CONSTRUCT_BARREL   << std::endl;
+  std::cout << "BARREL_PHI_START:   " << BARREL_PHI_START   << std::endl;
+  std::cout << "BARREL_PHI_END  :   " << BARREL_PHI_END     << std::endl;
+  std::cout << "CONSTRUCT_ENDCAP:   " << CONSTRUCT_ENDCAP   << std::endl;
+  std::cout << "ENDCAP_PHI_START:   " << ENDCAP_PHI_START   << std::endl;
+  std::cout << "ENDCAP_PHI_END  :   " << ENDCAP_PHI_END     << std::endl;
+  std::cout << "ENDCAP_THETA_START: " << ENDCAP_THETA_START << std::endl;
+  std::cout << "REFLECT_ENDCAP:     " << REFLECT_ENDCAP     << std::endl;
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "GLOBAL GEOMETRY PARAMETERS:" << std::endl;
+  std::cout << "PHI_SEGMENTS:         " << PHI_SEGMENTS         << std::endl;
+  std::cout << "D_PHI_GLOBAL:         " << D_PHI_GLOBAL         << std::endl;
+  std::cout << "N_THETA_BARREL:       " << N_THETA_BARREL       << std::endl;
+  std::cout << "N_THETA_ENDCAP:       " << N_THETA_ENDCAP       << std::endl;
+  std::cout << "D_THETA_BARREL:       " << D_THETA_BARREL       << std::endl;
+  std::cout << "D_THETA_ENDCAP:       " << D_THETA_ENDCAP       << std::endl;
+  std::cout << "N_PHI_BARREL_CRYSTAL: " << N_PHI_BARREL_CRYSTAL << std::endl;
+  std::cout << "D_PHI_BARREL_CRYSTAL: " << D_PHI_BARREL_CRYSTAL << std::endl;
+  std::cout << "THETA_SIZE_ENDCAP:    " << THETA_SIZE_ENDCAP    << std::endl;
+  std::cout << std::endl;
 
-      double dThetaBarrel =(M_PI-2*thetaSizeEndcap)/(nThetaBarrel);
-      double dThetaEndcap =thetaSizeEndcap/nThetaEndcap;
+  //-----------------------------------------------------------------------------------
+  // Initialize detector element
+  //-----------------------------------------------------------------------------------
 
-      int    nPhiBarrel = 16;
-      double dPhiBarrel = 2*M_PI/nPhiBarrel;
+  std::string name = detectorXML.nameStr();
+  dd4hep::DetElement Scepcal(name, detectorXML.id());
+  dd4hep::Volume experimentalHall = theDetector.pickMotherVolume(Scepcal);
 
-      int    nPhiEndcap = nPhiBarrel;
-      double dPhiEndcap = dPhiBarrel;
+  dd4hep::xml::Dimension sdType = detectorXML.child(_Unicode(sensitive));
+  sens.setType(sdType.typeStr());
+
+  std::cout << "Sensitive Detector Type: " << sdType.typeStr() << std::endl;
+
+  dd4hep::Box     scepcalAssemblyShape(Rin+2*Fdz+2*Rdz, Rin+2*Fdz+2*Rdz, 2*EBz+2*Fdz+2*Rdz);
+  dd4hep::Volume  scepcalAssemblyVol("scepcalAssemblyVol", scepcalAssemblyShape, theDetector.material("Vacuum"));
+  scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyGlobalVisXML.visStr());
+  // scepcalAssemblyVol.setSensitiveDetector(sens);
+
+  // Initialize the segmentation
+  dd4hep::Readout readout = sens.readout();
+  dd4hep::Segmentation geomseg = readout.segmentation();
+  dd4hep::Segmentation* _geoSeg = &geomseg;
+  auto segmentation=dynamic_cast<dd4hep::DDSegmentation::SCEPCALSegmentation *>(_geoSeg->segmentation());
+  segmentation->setGeomParams(Fdz, Rdz, nomfw, nomth, EBz, Rin, PHI_SEGMENTS);
+
+  //-----------------------------------------------------------------------------------
+  // Barrel + Timing
+  //-----------------------------------------------------------------------------------
+
+  // Barrel envelope
+  double thC_end          = THETA_SIZE_ENDCAP+D_THETA_BARREL/2;
+
+  double r0slice_end      = Rin/sin(thC_end);
+  double y0slice_end      = r0slice_end*tan(D_THETA_BARREL/2.);
+  double slice_front_jut  = y0slice_end*sin(M_PI/2-thC_end);
+
+  double z1slice          = Rin -slice_front_jut;
+  double z2slice          = Rin +Fdz +Rdz +slice_front_jut;
+  double zheight_slice    = (z2slice-z1slice)/2;
+
+  double y1slice          = z1slice*tan(M_PI/2-THETA_SIZE_ENDCAP);
+  double y2slice          = z2slice*tan(M_PI/2-THETA_SIZE_ENDCAP);
+
+  // Timing layer envelope
+  double  rT      = z1slice -2*nomth;
+  double  wT      = rT *tan(D_PHI_GLOBAL/2);
+  int     nTiles  = ceil(y1slice/wT);
+  double  lT      = 2*y1slice/nTiles;
+  int     nCy     = floor(lT/nomth);
+  double  actY    = lT/nCy;
+  double  actX    = 2*wT/nCy; 
+
+  //-----------------------------------------------------------------------------------
+  // Reco struct
+  //-----------------------------------------------------------------------------------
+  typedef LayeredCalorimeterData::Layer CaloCellData;
+
+  LayeredCalorimeterData* barrelData = new LayeredCalorimeterData;
+  barrelData->layoutType = LayeredCalorimeterData::BarrelLayout;
+  barrelData->inner_symmetry = PHI_SEGMENTS;
+  barrelData->outer_symmetry = PHI_SEGMENTS; 
+  barrelData->inner_phi0 = 0.; 
+  barrelData->outer_phi0 = 0.; 
+  barrelData->gap0 = 0.; //FIXME
+  barrelData->gap1 = 0.; //FIXME
+  barrelData->gap2 = 0.; //FIXME  
+  barrelData->extent[0] =  rT;
+  barrelData->extent[1] =  z2slice;
+  barrelData->extent[2] = -y2slice;
+  barrelData->extent[3] =  y2slice;
+
+  LayeredCalorimeterData* endcapData = new LayeredCalorimeterData;
+  endcapData->layoutType = LayeredCalorimeterData::ConicalLayout;
+  endcapData->inner_symmetry = PHI_SEGMENTS;
+  endcapData->outer_symmetry = PHI_SEGMENTS; 
+  endcapData->inner_phi0 = 0.; 
+  endcapData->outer_phi0 = 0.; 
+  endcapData->gap0 = 0.; //FIXME
+  endcapData->gap1 = 0.; //FIXME
+  endcapData->gap2 = 0.; //FIXME  
+  endcapData->extent[0] =  rT;
+  endcapData->extent[1] =  z2slice;
+  endcapData->extent[2] = -y2slice;
+  endcapData->extent[3] =  y2slice;
+
+  for (int iPhi= CONSTRUCT_BARREL? BARREL_PHI_START:BARREL_PHI_END ; iPhi<BARREL_PHI_END ; iPhi++) {
+
+    double phiEnvBarrel = iPhi*D_PHI_GLOBAL;
+    
+    //-----------------------------------------------------------------------------------
+    // Timing Layer
+    //-----------------------------------------------------------------------------------
+
+    // dd4hep::Box timingAssemblyShape(nomth,wT,y1slice);
+    // dd4hep::Volume timingAssemblyVolume("TimingAssembly", timingAssemblyShape, theDetector.material("Vacuum"));
+    // timingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+
+    // RotationZYX rotTimingAssembly(0, 0, 0);
+    // RotationZ rotZPhi(phiEnvBarrel);
+    // rotTimingAssembly = rotZPhi*rotTimingAssembly;
+
+    // double rTimingAssembly = rT+nomth;
+    // Position dispTimingAssembly(rTimingAssembly*cos(phiEnvBarrel),
+                                // rTimingAssembly*sin(phiEnvBarrel),
+                                // 0);
+
+    // scepcalAssemblyVol.placeVolume( timingAssemblyVolume, Transform3D(rotTimingAssembly, dispTimingAssembly) );
+
+    // dd4hep::Box timingCrystalLg(nomth/2,actX/2,lT/2);
+    // dd4hep::Box timingCrystalTr(nomth/2,wT,actY/2);
+    // dd4hep::Volume timingCrystalLgVol("TimingCrystalLg", timingCrystalLg, timingLgMat);
+    // dd4hep::Volume timingCrystalTrVol("TimingCrystalTr", timingCrystalTr, timingTrMat);
+    // timingCrystalLgVol.setVisAttributes(theDetector, timingLgXML.visStr());
+    // timingCrystalTrVol.setVisAttributes(theDetector, timingTrXML.visStr());
+
+    // for (int nTile=0; nTile<nTiles; nTile++) {
+
+    //   for (int nC=0; nC<nCy; nC++) {
+
+    //     int phiEnvBarrelSign = iPhi%2==0? 1:-1;
+    //     int sign             = nTile%2==0? 1:-1;
+
+    //     RotationZYX rotTiming(0, 0, 0);
+
+    //     Position dispLg(sign*phiEnvBarrelSign*(nomth/2),
+    //                     -wT +actX/2 + nC*actX,
+    //                     -y1slice +nTile*lT + lT/2
+    //                     );
+
+    //     Position dispTr(sign*phiEnvBarrelSign*(-nomth/2),
+    //                     0,
+    //                     -y1slice +nTile*lT +actY/2 +nC*actY
+    //                     );
+
+    //     auto timingLgId64=segmentation->setVolumeID(1,  nTile*nCy +nC , iPhi, 0);
+    //     // auto timingTrId64=segmentation->setVolumeID(1, -nTile*nCy -nC , iPhi, 0);
+    //     auto timingTrId64=segmentation->setVolumeID(1,  nTile*nCy +nC , iPhi, 3);
+
+    //     int timingLgId32=segmentation->getFirst32bits(timingLgId64);
+    //     int timingTrId32=segmentation->getFirst32bits(timingTrId64);
+
+    //     // Place volumes and ID them
+    //     dd4hep::PlacedVolume timingLgp = timingAssemblyVolume.placeVolume( timingCrystalLgVol, timingLgId32, Transform3D(rotTiming,dispLg) );
+    //     dd4hep::PlacedVolume timingTrp = timingAssemblyVolume.placeVolume( timingCrystalTrVol, timingTrId32, Transform3D(rotTiming,dispTr) );
+
+    //     if (!timingLgp.volume().isSensitive()) timingLgp.volume().setSensitiveDetector(sens);
+    //     if (!timingTrp.volume().isSensitive()) timingTrp.volume().setSensitiveDetector(sens);
+
+    //     Position dispLgglobal = dispTimingAssembly+rotZPhi*dispLg;
+    //     Position dispTrglobal = dispTimingAssembly+rotZPhi*dispTr;
+
+    //     CaloCellData timingCellLg;
+    //     timingCellLg.cellSize0 = lT;
+    //     timingCellLg.cellSize1 = actX;
+    //     timingCellLg.inner_thickness     = nomth;
+    //     timingCellLg.outer_thickness     = nomth;
+    //     timingCellLg.sensitive_thickness = nomth;
+    //     timingCellLg.inner_nRadiationLengths   = nomth/timingLgMat.radLength();
+    //     timingCellLg.inner_nInteractionLengths = nomth/timingLgMat.intLength();
+    //     timingCellLg.outer_nRadiationLengths   = nomth/timingLgMat.radLength();
+    //     timingCellLg.outer_nInteractionLengths = nomth/timingLgMat.intLength();
+    //     timingCellLg.distance = sqrt(dispLgglobal.mag2()); 
+    //     barrelData->layers.push_back( timingCellLg ) ;
+
+    //     CaloCellData timingCellTr;
+    //     timingCellTr.cellSize0 = actY;
+    //     timingCellTr.cellSize1 = 2*wT;
+    //     timingCellTr.inner_thickness     = nomth;
+    //     timingCellTr.outer_thickness     = nomth;
+    //     timingCellTr.sensitive_thickness = nomth;
+    //     timingCellTr.inner_nRadiationLengths   = nomth/timingTrMat.radLength();
+    //     timingCellTr.inner_nInteractionLengths = nomth/timingTrMat.intLength();
+    //     timingCellTr.outer_nRadiationLengths   = nomth/timingTrMat.radLength();
+    //     timingCellTr.outer_nInteractionLengths = nomth/timingTrMat.intLength();
+    //     timingCellTr.distance = sqrt(dispTrglobal.mag2()); 
+    //     barrelData->layers.push_back( timingCellTr ) ;
+
+    //     timingLgp.addPhysVolID("system", 1);
+    //     timingLgp.addPhysVolID("eta", nTile*nCy +nC);
+    //     timingLgp.addPhysVolID("phi", iPhi);
+    //     timingLgp.addPhysVolID("depth", 0);
+
+    //     timingTrp.addPhysVolID("system", 1);
+    //     // timingTrp.addPhysVolID("eta", -1 -nTile*nCy -nC);
+    //     timingTrp.addPhysVolID("eta", nTile*nCy +nC);
+
+    //     timingTrp.addPhysVolID("phi", iPhi);
+    //     timingTrp.addPhysVolID("depth", 3);
+    //   }
+    // }
+
+    //-----------------------------------------------------------------------------------
+    // Barrel Crystals
+    //-----------------------------------------------------------------------------------
+
+    for (int nGamma=0; nGamma<N_PHI_BARREL_CRYSTAL; nGamma++) {
+
+      double gamma = -D_PHI_GLOBAL/2+D_PHI_BARREL_CRYSTAL/2+D_PHI_BARREL_CRYSTAL*nGamma;
+
+      // Make assembly slice
+      double x0y0le = z1slice*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+      double x0y0re = z1slice*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
+
+      double x1y1le = z2slice*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+      double x1y1re = z2slice*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
+
+      double verticesS[]={
+                          -y1slice, x0y0le,
+                          -y1slice, x0y0re,
+                           y1slice, x0y0re,
+                           y1slice, x0y0le,
+
+                          -y2slice, x1y1le,
+                          -y2slice, x1y1re,
+                           y2slice, x1y1re,
+                           y2slice, x1y1le
+                         };
       
-      int    nPhiBarrelCrystal   =floor(2*M_PI*Rin/(nPhiBarrel*nomfw));
-      double dPhiBarrelCrystal   =dPhiBarrel/nPhiBarrelCrystal;
+      dd4hep::EightPointSolid barrelSliceAssemblyShape(zheight_slice,verticesS);
+      dd4hep::Volume barrelSliceAssemblyVolume("BarrelSliceAssembly", barrelSliceAssemblyShape, theDetector.material("Vacuum"));
+      barrelSliceAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
 
-      dd4hep::Box scepcalAssemblyShape(Rin+2*Fdz+2*Rdz, Rin+2*Fdz+2*Rdz, 2*EBz+2*Fdz+2*Rdz);
-      dd4hep::Volume scepcalAssemblyVol("scepcalAssemblyVol", scepcalAssemblyShape, theDetector.material("Vacuum"));
-      scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyGlobalVisXML.visStr());
+      RotationZYX rotSlice(0, M_PI/2, 0);
+      RotationZ rotZSlice(phiEnvBarrel);
+      rotSlice = rotZSlice*rotSlice;
 
-      /** 
-       * 
-       * Barrel
-       * 
-       * **/
+      double rSlice =(z1slice+z2slice)/2;
 
-      for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
+      Position dispSlice(rSlice*cos(phiEnvBarrel),
+                          rSlice*sin(phiEnvBarrel),
+                          0);
 
-        if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
+      scepcalAssemblyVol.placeVolume( barrelSliceAssemblyVolume, Transform3D(rotSlice, dispSlice) );
 
-        // Shared calculations for timing layer and barrel envelopes
-        double thC_end = thetaSizeEndcap+dThetaBarrel/2;
+      for (int iTheta=0; iTheta<N_THETA_BARREL; iTheta++) {
+    
+        if (debugLevel>1) std::cout << "  Barrel: theta: " << iTheta << std::endl;
 
-        double r0slice_end =Rin/sin(thC_end);
-        double y0slice_end =r0slice_end*tan(dThetaBarrel/2.);
-        double slice_front_jut = y0slice_end*sin(M_PI/2-thC_end);
+        double thC =THETA_SIZE_ENDCAP+D_THETA_BARREL/2+(iTheta*D_THETA_BARREL);
 
-        double z1slice =Rin -slice_front_jut;
-        double z2slice =Rin +Fdz +Rdz +slice_front_jut;
-        double zheight_slice = (z2slice-z1slice)/2;
-
-        double y1slice =z1slice*tan(M_PI/2-thetaSizeEndcap);
-        double y2slice =z2slice*tan(M_PI/2-thetaSizeEndcap);
-
-        double phi=iPhi*dPhiBarrel;
-
-
-        // Timing layer
-
-        double rT = z1slice -2*nomth;
-        double w  = rT *tan(dPhiBarrel/2);
-        int nTiles= ceil(y1slice/w);
-        double lT = 2*y1slice/nTiles;
-        int nCy = floor(lT/nomth);
-        double actY = lT/nCy;
-        double actX = 2*w/nCy; 
-
-        dd4hep::Box timingAssemblyShape(nomth,w,y1slice);
-        dd4hep::Volume timingAssemblyVolume("TimingAssembly", timingAssemblyShape, theDetector.material("Vacuum"));
-        timingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
-
-        RotationZYX rotTimingAssembly(0, 0, 0);
-        ROOT::Math::RotationZ rotZPhi = ROOT::Math::RotationZ(phi);
-        rotTimingAssembly = rotZPhi*rotTimingAssembly;
-
-        double rTimingAssembly = rT+nomth;
-        Position dispTimingAssembly(rTimingAssembly*cos(phi),
-                                    rTimingAssembly*sin(phi),
-                                    0);
-
-        scepcalAssemblyVol.placeVolume( timingAssemblyVolume, Transform3D(rotTimingAssembly, dispTimingAssembly) );
-
-        dd4hep::Box timingCrystalTr(nomth/2,w,actY/2);
-        dd4hep::Box timingCrystalLg(nomth/2,actX/2,lT/2);
-        dd4hep::Volume timingCrystalTrVol("TimingCrystalTr", timingCrystalTr, timingTrMat);
-        dd4hep::Volume timingCrystalLgVol("TimingCrystalLg", timingCrystalLg, timingLgMat);
-        timingCrystalTrVol.setVisAttributes(theDetector, timingTrXML.visStr());
-        timingCrystalLgVol.setVisAttributes(theDetector, timingLgXML.visStr());
-
-        for (int nTile=0; nTile<nTiles; nTile++) {
-
-          for (int nC=0; nC<nCy; nC++) {
-
-            int phiSign =  iPhi%2==0? 1:-1;
-            int sign    = nTile%2==0? 1:-1;
-
-            RotationZYX rotTiming(0, 0, 0);
-
-            Position dispLg(sign*phiSign*(nomth/2),
-                            -w +actX/2 + nC*actX,
-                            -y1slice +nTile*lT + lT/2
-                            );
-
-            Position dispTr(sign*phiSign*(-nomth/2),
-                            0,
-                            -y1slice +nTile*lT +actY/2 +nC*actY
-                            );
-
-            auto timingLgId64=segmentation->setVolumeID(1, nTile*nCy +nC , iPhi, 0);
-            auto timingTrId64=segmentation->setVolumeID(1, -nTile*nCy -nC , iPhi, 0);
-            int timingLgId32=segmentation->getFirst32bits(timingLgId64);
-            int timingTrId32=segmentation->getFirst32bits(timingTrId64);
-
-            // Place volumes and ID them
-            dd4hep::PlacedVolume timingLgp = timingAssemblyVolume.placeVolume( timingCrystalLgVol, timingLgId32, Transform3D(rotTiming,dispLg) );
-            dd4hep::PlacedVolume timingTrp = timingAssemblyVolume.placeVolume( timingCrystalTrVol, timingTrId32, Transform3D(rotTiming,dispTr) );
-
-            timingLgp.addPhysVolID("system", 1);
-            timingLgp.addPhysVolID("eta", nTile*nCy +nC);
-            timingLgp.addPhysVolID("phi", iPhi);
-            timingLgp.addPhysVolID("depth", 0);
-
-            timingTrp.addPhysVolID("system", 1);
-            timingTrp.addPhysVolID("eta", -nTile*nCy -nC);
-            timingTrp.addPhysVolID("phi", iPhi);
-            timingTrp.addPhysVolID("depth", 0);
-          }
-        }
-
-        // Barrel Crystals
-
-        for (int nGamma=0; nGamma<nPhiBarrelCrystal; nGamma++) {
-
-          double gamma = -dPhiBarrel/2+dPhiBarrelCrystal/2+dPhiBarrelCrystal*nGamma;
-
-          // Make assembly slice
-          double x0y0le = z1slice*tan(gamma-dPhiBarrelCrystal/2);
-          double x0y0re = z1slice*tan(gamma+dPhiBarrelCrystal/2);
-
-          double x1y1le = z2slice*tan(gamma-dPhiBarrelCrystal/2);
-          double x1y1re = z2slice*tan(gamma+dPhiBarrelCrystal/2);
-
-          double verticesS[]={
-                              -y1slice,x0y0le,
-                              -y1slice,x0y0re,
-                              y1slice,x0y0re,
-                              y1slice,x0y0le,
-
-                              -y2slice,x1y1le,
-                              -y2slice,x1y1re,
-                              y2slice,x1y1re,
-                              y2slice,x1y1le
-                              };
-          
-          dd4hep::EightPointSolid barrelSliceAssemblyShape(zheight_slice,verticesS);
-          dd4hep::Volume barrelSliceAssemblyVolume("BarrelSliceAssembly", barrelSliceAssemblyShape, theDetector.material("Vacuum"));
-          barrelSliceAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
-
-          RotationZYX rotSlice(0, M_PI/2, 0);
-          ROOT::Math::RotationZ rotZSlice = ROOT::Math::RotationZ(phi);
-          rotSlice = rotZSlice*rotSlice;
-
-          double rSlice =(z1slice+z2slice)/2;
-
-          Position dispSlice(rSlice*cos(phi),
-                             rSlice*sin(phi),
-                             0);
-
-          scepcalAssemblyVol.placeVolume( barrelSliceAssemblyVolume, Transform3D(rotSlice, dispSlice) );
-
-          for (int iTheta=0; iTheta<nThetaBarrel; iTheta++) {
-        
-            if (debugLevel>1) std::cout << "  Barrel: theta: " << iTheta << std::endl;
-
-            double thC =thetaSizeEndcap+dThetaBarrel/2+(iTheta*dThetaBarrel);
-
-            double r0e=Rin/sin(thC);
-            double r1e=r0e+Fdz;
-            double r2e=r1e+Rdz;
-
-            double y0e=r0e*tan(dThetaBarrel/2.);
-            double y1e=r1e*tan(dThetaBarrel/2.);
-            double y2e=r2e*tan(dThetaBarrel/2.);
-
-            // Make crystal shapes
-            // Projective trapezoids using EightPointSolids. see: https://root.cern.ch/doc/master/classTGeoArb8.html
-
-            double x0y0 = (r0e*cos(thC) +y0e*sin(thC)) *tan(thC -dThetaBarrel/2.);
-            double x1y0 = (r0e*cos(thC) -y0e*sin(thC)) *tan(thC +dThetaBarrel/2.);
-
-            double x0y0l = x0y0*tan(gamma-dPhiBarrelCrystal/2);
-            double x0y0r = x0y0*tan(gamma+dPhiBarrelCrystal/2);
-
-            double x1y0l = x1y0*tan(gamma-dPhiBarrelCrystal/2);
-            double x1y0r = x1y0*tan(gamma+dPhiBarrelCrystal/2);
-
-            double x0y1 = (r1e*cos(thC) +y1e*sin(thC)) *tan(thC -dThetaBarrel/2.);
-            double x1y1 = (r1e*cos(thC) -y1e*sin(thC)) *tan(thC +dThetaBarrel/2.);
-
-            double x0y1l = x0y1*tan(gamma-dPhiBarrelCrystal/2);
-            double x0y1r = x0y1*tan(gamma+dPhiBarrelCrystal/2);
-
-            double x1y1l = x1y1*tan(gamma-dPhiBarrelCrystal/2);
-            double x1y1r = x1y1*tan(gamma+dPhiBarrelCrystal/2);
-
-            double x0y2 = (r2e*cos(thC) +y2e*sin(thC)) *tan(thC -dThetaBarrel/2.);
-            double x1y2 = (r2e*cos(thC) -y2e*sin(thC)) *tan(thC +dThetaBarrel/2.);
-
-            double x0y2l = x0y2*tan(gamma-dPhiBarrelCrystal/2);
-            double x0y2r = x0y2*tan(gamma+dPhiBarrelCrystal/2);
-
-            double x1y2l = x1y2*tan(gamma-dPhiBarrelCrystal/2);
-            double x1y2r = x1y2*tan(gamma+dPhiBarrelCrystal/2);
-
-            // Front (F) and Rear (R) crystal shapes
-
-            double verticesF[]={
-                               (x0y0r), (0+y0e),
-                               (x1y0r), (0-y0e),
-                               ( x1y0l), (0-y0e),
-                               ( x0y0l), (0+y0e),
-
-                                (x0y1r), (0+y1e),
-                                (x1y1r), (0-y1e),
-                                ( x1y1l), (0-y1e),
-                                ( x0y1l), (0+y1e)
-
-                                };
-
-            double verticesR[]={
-                                (x0y1r), (0+y1e),
-                                (x1y1r), (0-y1e),
-                                ( x1y1l), (0-y1e),
-                                ( x0y1l), (0+y1e),
-
-                                (x0y2r), (0+y2e),
-                                (x1y2r), (0-y2e),
-                                ( x1y2l), (0-y2e),
-                                ( x0y2l), (0+y2e)
-
-                                };
-
-            dd4hep::EightPointSolid crystalFShape(Fdz/2, verticesF);
-            dd4hep::EightPointSolid crystalRShape(Rdz/2, verticesR);
-
-            // Promote shapes to volumes and set attributes
-            dd4hep::Volume crystalFVol("BarrelCrystalF", crystalFShape, crystalFMat);
-            dd4hep::Volume crystalRVol("BarrelCrystalR", crystalRShape, crystalRMat);
-
-            crystalFVol.setVisAttributes(theDetector, crystalFXML.visStr());
-            crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
-
-            RotationZYX rot(M_PI/2, -M_PI/2 +thC, 0);
-
-            double rF=r0e+Fdz/2.;
-            Position dispF(-rF*cos(thC),
-                          0,
-                          -(rSlice-rF*sin(thC))
-                          );
-
-            double rR=r1e+Rdz/2.;
-            Position dispR(-rR*cos(thC),
-                          0,
-                          -(rSlice-rR*sin(thC))
-                          );
-
-            auto crystalFId64=segmentation->setVolumeID(1, nThetaEndcap+iTheta , iPhi*nPhiBarrelCrystal+nGamma, 1);
-            auto crystalRId64=segmentation->setVolumeID(1, nThetaEndcap+iTheta , iPhi*nPhiBarrelCrystal+nGamma, 2);
-            int crystalFId32=segmentation->getFirst32bits(crystalFId64);
-            int crystalRId32=segmentation->getFirst32bits(crystalRId64);
-
-            // Place volumes and ID them
-            dd4hep::PlacedVolume crystalFp = barrelSliceAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF) );
-            dd4hep::PlacedVolume crystalRp = barrelSliceAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR) );
-
-            crystalFp.addPhysVolID("system", 1);
-            crystalFp.addPhysVolID("eta", nThetaEndcap+iTheta);
-            crystalFp.addPhysVolID("phi", iPhi*nPhiBarrelCrystal+nGamma);
-            crystalFp.addPhysVolID("depth", 1);
-            
-            crystalRp.addPhysVolID("system", 1);
-            crystalRp.addPhysVolID("eta", nThetaEndcap+iTheta);
-            crystalRp.addPhysVolID("phi", iPhi*nPhiBarrelCrystal+nGamma);
-            crystalRp.addPhysVolID("depth", 2);
-
-            // std::bitset<10> _eta(nThetaEndcap+iTheta);
-            // std::bitset<10> _phi(iPhi*nPhiBarrelCrystal+nGamma);
-            // std::bitset<3>  depthF(1);
-            // std::bitset<3>  depthR(2);
-            // std::bitset<32> id32F(crystalFId32);
-            // std::bitset<32> id32R(crystalRId32);
-
-            //VolIDs crystalFpVID = static_cast<VolIDs> crystalFp.VolIDs();
-            //VolIDs crystalRpVID = static_cast<VolIDs> crystalRp.VolIDs();
-
-            //std::cout << "B crystalF eta: " << nThetaEndcap+iTheta << " phi: " << iPhi << " depth: " << " 1 " << std::endl;
-            //std::cout << "B crystalF eta: " << _eta << " phi: " << _phi << " depth: " << depthF << std::endl;
-            //std::cout << "B crystalF eta: " << segmentation->Eta(crystalFId64) << " phi: " << segmentation->Phi(crystalFId64) << " depth: " << depthF << std::endl;
-            //std::cout << "B crystalFId32: " << id32F << std::endl;
-            //std::cout << "B crystalF copyNum: " <<  crystalFId32 << std::endl;
-            //std::cout << "B crystalF copyNum: " <<  crystalFId64 << std::endl;
-            //std::cout << "B crystalR copyNum: " << crystalRp.copyNumber() << " VolIDs: " << dd4hep::detail::tools::toString( crystalRpVID ) << std::endl;
-
-            //std::cout << "B crystalR eta: " << nThetaEndcap+iTheta << " phi: " << iPhi << " depth: " << " 2 " << std::endl;
-            //std::cout << "B crystalR eta: " << _eta << " phi: " << _phi << " depth: " << depthR << std::endl;
-            //std::cout << "B crystalRId32: " << id32R << std::endl;
-            //std::cout << "B crystalR copyNum: " <<  crystalRId32 << std::endl;
-            //std::cout << "B crystalR copyNum: " << crystalRp.copyNumber() << " VolIDs: " << dd4hep::detail::tools::toString( crystalRpVID ) << std::endl;
-          }
-        }
-      }
-
-      /** 
-       * 
-       * Endcap
-       * 
-       * **/
-
-      for (int iTheta=5; iTheta<nThetaEndcap; iTheta++) {
-
-        double thC        = dThetaEndcap/2+ iTheta*dThetaEndcap;
-        double RinEndcap  = EBz*tan(thC);
-
-        int    nPhiEndcapCrystal = floor(2*M_PI*RinEndcap/(nPhiEndcap*nomfw));
-        double dPhiEndcapCrystal = dPhiEndcap/nPhiEndcapCrystal;
-
-        double r0e=RinEndcap/sin(thC);
+        double r0e=Rin/sin(thC);
         double r1e=r0e+Fdz;
         double r2e=r1e+Rdz;
 
-        double y0e=r0e*tan(dThetaEndcap/2.);
-        double y1e=r1e*tan(dThetaEndcap/2.);
-        double y2e=r2e*tan(dThetaEndcap/2.);
+        double y0e=r0e*tan(D_THETA_BARREL/2.);
+        double y1e=r1e*tan(D_THETA_BARREL/2.);
+        double y2e=r2e*tan(D_THETA_BARREL/2.);
 
-        // Skip crystals at low theta (near the beampipe) if the crystal face aspect ratio is outside 14% of unity
-        // double centerCrystalWidth = RinEndcap*sin(dPhiEndcapCrystal/2);
-        // if (abs(1-y0e/centerCrystalWidth)>0.14) continue;
+        // Make crystal shapes
+        // Projective trapezoids using EightPointSolids. see: https://root.cern.ch/doc/master/classTGeoArb8.html
 
-        // Make assembly polyhedra
-        double a = r0e/cos(dThetaEndcap/2);
-        double z1 = a*cos(thC+dThetaEndcap/2);
-        double r1min = z1*tan(thC-dThetaEndcap/2);
-        double r1max = z1*tan(thC+dThetaEndcap/2);
+        double x0y0 = (r0e*cos(thC) +y0e*sin(thC)) *tan(thC -D_THETA_BARREL/2.);
+        double x1y0 = (r0e*cos(thC) -y0e*sin(thC)) *tan(thC +D_THETA_BARREL/2.);
 
-        double b = sqrt(r2e*r2e +y2e*y2e);
-        double z2 = b*cos(thC-dThetaEndcap/2);
-        double r2min = z2*tan(thC-dThetaEndcap/2);
-        double r2max = z2*tan(thC+dThetaEndcap/2);
+        double x0y0l = x0y0*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+        double x0y0r = x0y0*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
 
-        std::vector<double> zPolyhedra = {z1,z2};
-        std::vector<double> rminPolyhedra = {r1min, r2min};
-        std::vector<double> rmaxPolyhedra = {r1max, r2max};
+        double x1y0l = x1y0*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+        double x1y0r = x1y0*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
 
-        dd4hep::Polyhedra phiRingAssemblyShape(nPhiEndcap, dPhiEndcap/2, 2*M_PI, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
+        double x0y1 = (r1e*cos(thC) +y1e*sin(thC)) *tan(thC -D_THETA_BARREL/2.);
+        double x1y1 = (r1e*cos(thC) -y1e*sin(thC)) *tan(thC +D_THETA_BARREL/2.);
 
-        Position dispCone(0,0,0);
-        Position dispCone1(0,0,0);
-        RotationZYX rotMirror(0, M_PI, 0);
+        double x0y1l = x0y1*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+        double x0y1r = x0y1*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
 
-        // Endcap assembly volume
-        dd4hep::Volume phiRingAssemblyVolume("EndcapRingAssembly", phiRingAssemblyShape, theDetector.material("Vacuum"));
-        phiRingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
-        scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume, dispCone );
+        double x1y1l = x1y1*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+        double x1y1r = x1y1*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
 
-        // Reflected endcap
-        dd4hep::Volume phiRingAssemblyVolume1("EndcapRingAssembly1", phiRingAssemblyShape, theDetector.material("Vacuum"));
-        phiRingAssemblyVolume1.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
-        if (ReflectEndcap == true) {
-          scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
-        }
+        double x0y2 = (r2e*cos(thC) +y2e*sin(thC)) *tan(thC -D_THETA_BARREL/2.);
+        double x1y2 = (r2e*cos(thC) -y2e*sin(thC)) *tan(thC +D_THETA_BARREL/2.);
 
-        for (int iPhi=0; iPhi<nPhiEndcap; iPhi++) {
+        double x0y2l = x0y2*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+        double x0y2r = x0y2*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
+
+        double x1y2l = x1y2*tan(gamma-D_PHI_BARREL_CRYSTAL/2);
+        double x1y2r = x1y2*tan(gamma+D_PHI_BARREL_CRYSTAL/2);
+
+        // Front (F) and Rear (R) crystal shapes
+        double verticesF[]={
+                            x0y0r,  y0e,
+                            x1y0r, -y0e,
+                            x1y0l, -y0e,
+                            x0y0l,  y0e,
+
+                            x0y1r,  y1e,
+                            x1y1r, -y1e,
+                            x1y1l, -y1e,
+                            x0y1l,  y1e
+                           };
+
+        double verticesR[]={
+                            x0y1r,  y1e,
+                            x1y1r, -y1e,
+                            x1y1l, -y1e,
+                            x0y1l,  y1e,
+
+                            x0y2r,  y2e,
+                            x1y2r, -y2e,
+                            x1y2l, -y2e,
+                            x0y2l,  y2e
+                           };
+
+        dd4hep::EightPointSolid crystalFShape(Fdz/2, verticesF);
+        dd4hep::EightPointSolid crystalRShape(Rdz/2, verticesR);
+
+        // Promote shapes to volumes and set attributes
+        dd4hep::Volume crystalFVol("BarrelCrystalF", crystalFShape, crystalFMat);
+        dd4hep::Volume crystalRVol("BarrelCrystalR", crystalRShape, crystalRMat);
+
+        crystalFVol.setVisAttributes(theDetector, crystalFXML.visStr());
+        crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
+
+        RotationZYX rot(M_PI/2, -M_PI/2 +thC, 0);
+
+        double rF=r0e+Fdz/2.;
+        Position dispF(-rF*cos(thC),
+                      0,
+                      -(rSlice-rF*sin(thC))
+                      );
+
+        double rR=r1e+Rdz/2.;
+        Position dispR(-rR*cos(thC),
+                      0,
+                      -(rSlice-rR*sin(thC))
+                      );
+
+        auto crystalFId64=segmentation->setVolumeID(1, N_THETA_ENDCAP+iTheta , iPhi*N_PHI_BARREL_CRYSTAL+nGamma, 1);
+        auto crystalRId64=segmentation->setVolumeID(1, N_THETA_ENDCAP+iTheta , iPhi*N_PHI_BARREL_CRYSTAL+nGamma, 2);
+        int crystalFId32=segmentation->getFirst32bits(crystalFId64);
+        int crystalRId32=segmentation->getFirst32bits(crystalRId64);
+
+        // Place volumes and ID them
+        dd4hep::PlacedVolume crystalFp = barrelSliceAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF) );
+        dd4hep::PlacedVolume crystalRp = barrelSliceAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR) );
+
+        if (!crystalFp.volume().isSensitive()) crystalFp.volume().setSensitiveDetector(sens);
+        if (!crystalRp.volume().isSensitive()) crystalRp.volume().setSensitiveDetector(sens);
+
+        Position dispFgamma(0, rF*sin(thC)*tan(gamma), 0);
+        Position dispFslice(rF*sin(thC)*cos(phiEnvBarrel),
+                    rF*sin(thC)*sin(phiEnvBarrel),
+                    rF*cos(thC));
+        Position dispFglobal(dispFslice+rotZSlice*dispFgamma);
+
+        Position dispRgamma(0, rR*sin(thC)*tan(gamma), 0);
+        Position dispRslice(rR*sin(thC)*cos(phiEnvBarrel),
+                    rR*sin(thC)*sin(phiEnvBarrel),
+                    rR*cos(thC));
+        Position dispRglobal(dispRslice+rotZSlice*dispRgamma);
+
+        CaloCellData barrelCellF;
+        barrelCellF.cellSize0 = 2*y0e;
+        barrelCellF.cellSize1 = x0y0l+x0y0r;
+        barrelCellF.inner_thickness     = Fdz;
+        barrelCellF.outer_thickness     = Fdz;
+        barrelCellF.sensitive_thickness = Fdz;
+        barrelCellF.inner_nRadiationLengths   = Fdz/crystalFMat.radLength();
+        barrelCellF.inner_nInteractionLengths = Fdz/crystalFMat.intLength();
+        barrelCellF.outer_nRadiationLengths   = Fdz/crystalFMat.radLength();
+        barrelCellF.outer_nInteractionLengths = Fdz/crystalFMat.intLength();
+        barrelCellF.distance = sqrt(dispFglobal.mag2()); 
+        barrelData->layers.push_back( barrelCellF ) ;
+
+        CaloCellData barrelCellR;
+        barrelCellR.cellSize0 = 2*y1e;
+        barrelCellR.cellSize1 = x0y1l+x0y1r;
+        barrelCellR.inner_thickness     = Rdz;
+        barrelCellR.outer_thickness     = Rdz;
+        barrelCellR.sensitive_thickness = Rdz;
+        barrelCellR.inner_nRadiationLengths   = Rdz/crystalRMat.radLength();
+        barrelCellR.inner_nInteractionLengths = Rdz/crystalRMat.intLength();
+        barrelCellR.outer_nRadiationLengths   = Rdz/crystalRMat.radLength();
+        barrelCellR.outer_nInteractionLengths = Rdz/crystalRMat.intLength();
+        barrelCellR.distance = sqrt(dispRglobal.mag2()); 
+        barrelData->layers.push_back( barrelCellR ) ;
+
+        crystalFp.addPhysVolID("system", 1);
+        crystalFp.addPhysVolID("eta", N_THETA_ENDCAP+iTheta);
+        crystalFp.addPhysVolID("phi", iPhi*N_PHI_BARREL_CRYSTAL+nGamma);
+        crystalFp.addPhysVolID("depth", 1);
+        
+        crystalRp.addPhysVolID("system", 1);
+        crystalRp.addPhysVolID("eta", N_THETA_ENDCAP+iTheta);
+        crystalRp.addPhysVolID("phi", iPhi*N_PHI_BARREL_CRYSTAL+nGamma);
+        crystalRp.addPhysVolID("depth", 2);
+      }
+    }
+  }
+
+  //-----------------------------------------------------------------------------------
+  // Endcap
+  //-----------------------------------------------------------------------------------
+
+  for (int iTheta=CONSTRUCT_ENDCAP? ENDCAP_THETA_START:N_THETA_ENDCAP ; iTheta<N_THETA_ENDCAP ; iTheta++) {
+
+    double thC        = D_THETA_ENDCAP/2+ iTheta*D_THETA_ENDCAP;
+    double RinEndcap  = EBz*tan(thC);
+
+    int    nPhiEndcapCrystal = floor(2*M_PI*RinEndcap/(PHI_SEGMENTS*nomfw));
+    double dPhiEndcapCrystal = D_PHI_GLOBAL/nPhiEndcapCrystal;
+
+    double r0e=RinEndcap/sin(thC);
+    double r1e=r0e+Fdz;
+    double r2e=r1e+Rdz;
+
+    double y0e=r0e*tan(D_THETA_ENDCAP/2.);
+    double y1e=r1e*tan(D_THETA_ENDCAP/2.);
+    double y2e=r2e*tan(D_THETA_ENDCAP/2.);
+
+    // Make assembly polyhedra
+    double a = r0e/cos(D_THETA_ENDCAP/2);
+    double z1 = a*cos(thC+D_THETA_ENDCAP/2);
+    double r1min = z1*tan(thC-D_THETA_ENDCAP/2);
+    double r1max = z1*tan(thC+D_THETA_ENDCAP/2);
+
+    double b = sqrt(r2e*r2e +y2e*y2e);
+    double z2 = b*cos(thC-D_THETA_ENDCAP/2);
+    double r2min = z2*tan(thC-D_THETA_ENDCAP/2);
+    double r2max = z2*tan(thC+D_THETA_ENDCAP/2);
+
+    std::vector<double> zPolyhedra = {z1,z2};
+    std::vector<double> rminPolyhedra = {r1min, r2min};
+    std::vector<double> rmaxPolyhedra = {r1max, r2max};
+
+    dd4hep::Polyhedra phiRingAssemblyShape(PHI_SEGMENTS, D_PHI_GLOBAL/2, 2*M_PI, zPolyhedra, rminPolyhedra, rmaxPolyhedra);
+
+    Position  dispCone(0,0,0);
+    Position  dispCone1(0,0,0);
+    RotationY rotMirror(M_PI);
+
+    // Endcap assembly volume
+    dd4hep::Volume phiRingAssemblyVolume("EndcapRingAssembly", phiRingAssemblyShape, theDetector.material("Vacuum"));
+    phiRingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+    scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume, dispCone );
+
+    dd4hep::Volume* phiRingAssemblyVolume1 = nullptr;
+
+    if (REFLECT_ENDCAP) {
+      phiRingAssemblyVolume1 = new dd4hep::Volume("EndcapRingAssembly1", phiRingAssemblyShape, theDetector.material("Vacuum"));
+      phiRingAssemblyVolume1->setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+      scepcalAssemblyVol.placeVolume( *phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
+    }
+
+    for (int iPhi=ENDCAP_PHI_START ; iPhi<ENDCAP_PHI_END ; iPhi++) {
+      
+      for (int nGamma=0; nGamma<nPhiEndcapCrystal; nGamma++) {
+
+        double gamma = -D_PHI_GLOBAL/2+dPhiEndcapCrystal/2+dPhiEndcapCrystal*nGamma;
+
+        double x0y0 = (r0e*cos(thC) +y0e*sin(thC)) *tan(thC -D_THETA_ENDCAP/2.);
+        double x1y0 = (r0e*cos(thC) -y0e*sin(thC)) *tan(thC +D_THETA_ENDCAP/2.);
+
+        double x0y0l = x0y0*tan(gamma-dPhiEndcapCrystal/2);
+        double x0y0r = x0y0*tan(gamma+dPhiEndcapCrystal/2);
+
+        double x1y0l = x1y0*tan(gamma-dPhiEndcapCrystal/2);
+        double x1y0r = x1y0*tan(gamma+dPhiEndcapCrystal/2);
+
+        double x0y1 = (r1e*cos(thC) +y1e*sin(thC)) *tan(thC -D_THETA_ENDCAP/2.);
+        double x1y1 = (r1e*cos(thC) -y1e*sin(thC)) *tan(thC +D_THETA_ENDCAP/2.);
+
+        double x0y1l = x0y1*tan(gamma-dPhiEndcapCrystal/2);
+        double x0y1r = x0y1*tan(gamma+dPhiEndcapCrystal/2);
+
+        double x1y1l = x1y1*tan(gamma-dPhiEndcapCrystal/2);
+        double x1y1r = x1y1*tan(gamma+dPhiEndcapCrystal/2);
+
+        double x0y2 = (r2e*cos(thC) +y2e*sin(thC)) *tan(thC -D_THETA_ENDCAP/2.);
+        double x1y2 = (r2e*cos(thC) -y2e*sin(thC)) *tan(thC +D_THETA_ENDCAP/2.);
+
+        double x0y2l = x0y2*tan(gamma-dPhiEndcapCrystal/2);
+        double x0y2r = x0y2*tan(gamma+dPhiEndcapCrystal/2);
+
+        double x1y2l = x1y2*tan(gamma-dPhiEndcapCrystal/2);
+        double x1y2r = x1y2*tan(gamma+dPhiEndcapCrystal/2);
+
+        double verticesF[]={
+                            x0y0r,  y0e,
+                            x1y0r, -y0e,
+                            x1y0l, -y0e,
+                            x0y0l,  y0e,
+
+                            x0y1r,  y1e,
+                            x1y1r, -y1e,
+                            x1y1l, -y1e,
+                            x0y1l,  y1e
+                           };
+
+        double verticesR[]={
+                            x0y1r,  y1e,
+                            x1y1r, -y1e,
+                            x1y1l, -y1e,
+                            x0y1l,  y1e,
+
+                            x0y2r,  y2e,
+                            x1y2r, -y2e,
+                            x1y2l, -y2e,
+                            x0y2l,  y2e
+                           };
+
+        dd4hep::EightPointSolid crystalFShape(Fdz/2, verticesF);
+        dd4hep::EightPointSolid crystalRShape(Rdz/2, verticesR);
+
+        dd4hep::Volume crystalFVol("EndcapCrystalF", crystalFShape, crystalFMat);
+        dd4hep::Volume crystalRVol("EndcapCrystalR", crystalRShape, crystalRMat);
+
+        crystalFVol.setVisAttributes(theDetector, crystalFXML.visStr());
+        crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
+        
+        double phiEnvEndcap=iPhi*D_PHI_GLOBAL;
+
+        RotationZYX rot(M_PI/2, thC, 0);
+        RotationZ rotZ(phiEnvEndcap);
+        rot = rotZ*rot;
+
+        double rF=r0e+Fdz/2.;
+        Position dispF(rF*sin(thC)*cos(phiEnvEndcap),
+                      rF*sin(thC)*sin(phiEnvEndcap),
+                      rF*cos(thC));
+
+        double rR=r1e+Rdz/2.;
+        Position dispR(rR*sin(thC)*cos(phiEnvEndcap),
+                      rR*sin(thC)*sin(phiEnvEndcap),
+                      rR*cos(thC));
+
+        auto crystalFId64=segmentation->setVolumeID(1, iTheta, iPhi*nPhiEndcapCrystal+nGamma, 1);
+        auto crystalRId64=segmentation->setVolumeID(1, iTheta, iPhi*nPhiEndcapCrystal+nGamma, 2);
+        int crystalFId32=segmentation->getFirst32bits(crystalFId64);
+        int crystalRId32=segmentation->getFirst32bits(crystalRId64);
+
+        dd4hep::PlacedVolume crystalFp = phiRingAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispCone) );
+        dd4hep::PlacedVolume crystalRp = phiRingAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispCone) );
+
+        if (!crystalFp.volume().isSensitive()) crystalFp.volume().setSensitiveDetector(sens);
+        if (!crystalRp.volume().isSensitive()) crystalRp.volume().setSensitiveDetector(sens);
+
+        Position dispFgamma(0, rF*sin(thC)*tan(gamma), 0);
+        Position dispFslice(rF*sin(thC)*cos(phiEnvEndcap),
+                    rF*sin(thC)*sin(phiEnvEndcap),
+                    rF*cos(thC));
+        Position dispFglobal(dispFslice+rotZ*dispFgamma);
+
+        Position dispRgamma(0, rR*sin(thC)*tan(gamma), 0);
+        Position dispRslice(rR*sin(thC)*cos(phiEnvEndcap),
+                    rR*sin(thC)*sin(phiEnvEndcap),
+                    rR*cos(thC));
+        Position dispRglobal(dispRslice+rotZ*dispRgamma);
+
+        CaloCellData endcapCellF;
+        endcapCellF.cellSize0 = 2*y0e;
+        endcapCellF.cellSize1 = x0y0l+x0y0r;
+        endcapCellF.inner_thickness     = Fdz;
+        endcapCellF.outer_thickness     = Fdz;
+        endcapCellF.sensitive_thickness = Fdz;
+        endcapCellF.inner_nRadiationLengths   = Fdz/crystalFMat.radLength();
+        endcapCellF.inner_nInteractionLengths = Fdz/crystalFMat.intLength();
+        endcapCellF.outer_nRadiationLengths   = Fdz/crystalFMat.radLength();
+        endcapCellF.outer_nInteractionLengths = Fdz/crystalFMat.intLength();
+        endcapCellF.distance = sqrt(dispFglobal.mag2()); 
+        barrelData->layers.push_back( endcapCellF ) ;
+
+        CaloCellData endcapCellR;
+        endcapCellR.cellSize0 = 2*y1e;
+        endcapCellR.cellSize1 = x0y1l+x0y1r;
+        endcapCellR.inner_thickness     = Rdz;
+        endcapCellR.outer_thickness     = Rdz;
+        endcapCellR.sensitive_thickness = Rdz;
+        endcapCellR.inner_nRadiationLengths   = Rdz/crystalRMat.radLength();
+        endcapCellR.inner_nInteractionLengths = Rdz/crystalRMat.intLength();
+        endcapCellR.outer_nRadiationLengths   = Rdz/crystalRMat.radLength();
+        endcapCellR.outer_nInteractionLengths = Rdz/crystalRMat.intLength();
+        endcapCellR.distance = sqrt(dispRglobal.mag2()); 
+        barrelData->layers.push_back( endcapCellR ) ;
+
+        crystalFp.addPhysVolID("system", 1);
+        crystalFp.addPhysVolID("eta", iTheta);
+        crystalFp.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
+        crystalFp.addPhysVolID("depth", 1);
+
+        crystalRp.addPhysVolID("system", 1);
+        crystalRp.addPhysVolID("eta", iTheta);
+        crystalRp.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
+        crystalRp.addPhysVolID("depth", 2);
+
+        if (REFLECT_ENDCAP) {
+          auto crystalFId641=segmentation->setVolumeID(1, N_THETA_ENDCAP+N_THETA_BARREL+N_THETA_ENDCAP-iTheta, iPhi*nPhiEndcapCrystal+nGamma, 1);
+          auto crystalRId641=segmentation->setVolumeID(1, N_THETA_ENDCAP+N_THETA_BARREL+N_THETA_ENDCAP-iTheta, iPhi*nPhiEndcapCrystal+nGamma, 2);
           
-          for (int nGamma=0; nGamma<nPhiEndcapCrystal; nGamma++) {
+          int crystalFId321=segmentation->getFirst32bits(crystalFId641);
+          int crystalRId321=segmentation->getFirst32bits(crystalRId641);
 
-            double gamma = -dPhiEndcap/2+dPhiEndcapCrystal/2+dPhiEndcapCrystal*nGamma;
-            // Make crystal shapes
+          dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1->placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
+          dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1->placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
 
-            double x0y0 = (r0e*cos(thC) +y0e*sin(thC)) *tan(thC -dThetaEndcap/2.);
-            double x1y0 = (r0e*cos(thC) -y0e*sin(thC)) *tan(thC +dThetaEndcap/2.);
+          if (!crystalFp1.volume().isSensitive()) crystalFp1.volume().setSensitiveDetector(sens);
+          if (!crystalRp1.volume().isSensitive()) crystalRp1.volume().setSensitiveDetector(sens);
 
-            double x0y0l = x0y0*tan(gamma-dPhiEndcapCrystal/2);
-            double x0y0r = x0y0*tan(gamma+dPhiEndcapCrystal/2);
+          crystalFp1.addPhysVolID("system", 1);
+          crystalFp1.addPhysVolID("eta", N_THETA_ENDCAP+N_THETA_BARREL+N_THETA_ENDCAP-iTheta);
+          crystalFp1.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
+          crystalFp1.addPhysVolID("depth", 1);
 
-            double x1y0l = x1y0*tan(gamma-dPhiEndcapCrystal/2);
-            double x1y0r = x1y0*tan(gamma+dPhiEndcapCrystal/2);
+          crystalRp1.addPhysVolID("system", 1);
+          crystalRp1.addPhysVolID("eta", N_THETA_ENDCAP+N_THETA_BARREL+N_THETA_ENDCAP-iTheta);
+          crystalRp1.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
+          crystalRp1.addPhysVolID("depth", 2);
 
-            double x0y1 = (r1e*cos(thC) +y1e*sin(thC)) *tan(thC -dThetaEndcap/2.);
-            double x1y1 = (r1e*cos(thC) -y1e*sin(thC)) *tan(thC +dThetaEndcap/2.);
+          Position dispFglobal1(rotMirror*(dispFslice+rotZ*dispFgamma));
+          Position dispRglobal1(rotMirror*(dispRslice+rotZ*dispRgamma));
 
-            double x0y1l = x0y1*tan(gamma-dPhiEndcapCrystal/2);
-            double x0y1r = x0y1*tan(gamma+dPhiEndcapCrystal/2);
+          CaloCellData endcapCellF1;
+          endcapCellF1.cellSize0 = 2*y0e;
+          endcapCellF1.cellSize1 = x0y0l+x0y0r;
+          endcapCellF1.inner_thickness     = Fdz;
+          endcapCellF1.outer_thickness     = Fdz;
+          endcapCellF1.sensitive_thickness = Fdz;
+          endcapCellF1.inner_nRadiationLengths   = Fdz/crystalFMat.radLength();
+          endcapCellF1.inner_nInteractionLengths = Fdz/crystalFMat.intLength();
+          endcapCellF1.outer_nRadiationLengths   = Fdz/crystalFMat.radLength();
+          endcapCellF1.outer_nInteractionLengths = Fdz/crystalFMat.intLength();
+          endcapCellF1.distance = sqrt(dispFglobal1.mag2()); 
+          barrelData->layers.push_back( endcapCellF1 ) ;
 
-            double x1y1l = x1y1*tan(gamma-dPhiEndcapCrystal/2);
-            double x1y1r = x1y1*tan(gamma+dPhiEndcapCrystal/2);
+          CaloCellData endcapCellR1;
+          endcapCellR1.cellSize0 = 2*y1e;
+          endcapCellR1.cellSize1 = x0y1l+x0y1r;
+          endcapCellR1.inner_thickness     = Rdz;
+          endcapCellR1.outer_thickness     = Rdz;
+          endcapCellR1.sensitive_thickness = Rdz;
+          endcapCellR1.inner_nRadiationLengths   = Rdz/crystalRMat.radLength();
+          endcapCellR1.inner_nInteractionLengths = Rdz/crystalRMat.intLength();
+          endcapCellR1.outer_nRadiationLengths   = Rdz/crystalRMat.radLength();
+          endcapCellR1.outer_nInteractionLengths = Rdz/crystalRMat.intLength();
+          endcapCellR1.distance = sqrt(dispRglobal1.mag2()); 
+          barrelData->layers.push_back( endcapCellR1 ) ;
 
-            double x0y2 = (r2e*cos(thC) +y2e*sin(thC)) *tan(thC -dThetaEndcap/2.);
-            double x1y2 = (r2e*cos(thC) -y2e*sin(thC)) *tan(thC +dThetaEndcap/2.);
-
-            double x0y2l = x0y2*tan(gamma-dPhiEndcapCrystal/2);
-            double x0y2r = x0y2*tan(gamma+dPhiEndcapCrystal/2);
-
-            double x1y2l = x1y2*tan(gamma-dPhiEndcapCrystal/2);
-            double x1y2r = x1y2*tan(gamma+dPhiEndcapCrystal/2);
-
-            double verticesF[]={
-                               (x0y0r), (0+y0e),
-                               (x1y0r), (0-y0e),
-                               ( x1y0l), (0-y0e),
-                               ( x0y0l), (0+y0e),
-
-                                (x0y1r), (0+y1e),
-                                (x1y1r), (0-y1e),
-                                ( x1y1l), (0-y1e),
-                                ( x0y1l), (0+y1e)
-
-                                };
-
-            double verticesR[]={
-                                (x0y1r), (0+y1e),
-                                (x1y1r), (0-y1e),
-                                ( x1y1l), (0-y1e),
-                                ( x0y1l), (0+y1e),
-
-                                (x0y2r), (0+y2e),
-                                (x1y2r), (0-y2e),
-                                ( x1y2l), (0-y2e),
-                                ( x0y2l), (0+y2e)
-
-                                };
-
-            dd4hep::EightPointSolid crystalFShape(Fdz/2, verticesF);
-            dd4hep::EightPointSolid crystalRShape(Rdz/2, verticesR);
-
-            dd4hep::Volume crystalFVol("EndcapCrystalF", crystalFShape, crystalFMat);
-            dd4hep::Volume crystalRVol("EndcapCrystalR", crystalRShape, crystalRMat);
-
-            crystalFVol.setVisAttributes(theDetector, crystalFXML.visStr());
-            crystalRVol.setVisAttributes(theDetector, crystalRXML.visStr());
-            
-            double phi=iPhi*dPhiEndcap;
-
-            RotationZYX rot(M_PI/2, thC, 0);
-            ROOT::Math::RotationZ rotZ = ROOT::Math::RotationZ(phi);
-            rot = rotZ*rot;
-
-            double rF=r0e+Fdz/2.;
-            Position dispF(rF*sin(thC)*cos(phi),
-                          rF*sin(thC)*sin(phi),
-                          rF*cos(thC));
-
-            double rR=r1e+Rdz/2.;
-            Position dispR(rR*sin(thC)*cos(phi),
-                          rR*sin(thC)*sin(phi),
-                          rR*cos(thC));
-
-            auto crystalFId64=segmentation->setVolumeID(1, iTheta, iPhi*nPhiEndcapCrystal+nGamma, 1);
-            auto crystalRId64=segmentation->setVolumeID(1, iTheta, iPhi*nPhiEndcapCrystal+nGamma, 2);
-            int crystalFId32=segmentation->getFirst32bits(crystalFId64);
-            int crystalRId32=segmentation->getFirst32bits(crystalRId64);
-
-            dd4hep::PlacedVolume crystalFp = phiRingAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispCone) );
-            dd4hep::PlacedVolume crystalRp = phiRingAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispCone) );
-
-            crystalFp.addPhysVolID("system", 1);
-            crystalFp.addPhysVolID("eta", iTheta);
-            crystalFp.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
-            crystalFp.addPhysVolID("depth", 1);
-
-            crystalRp.addPhysVolID("system", 1);
-            crystalRp.addPhysVolID("eta", iTheta);
-            crystalRp.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
-            crystalRp.addPhysVolID("depth", 2);
-
-            // Add suffix 1 for the other endcap (mirrored)
-            if (ReflectEndcap == true) {
-              auto crystalFId641=segmentation->setVolumeID(1, nThetaEndcap+nThetaBarrel+nThetaEndcap-iTheta, iPhi*nPhiEndcapCrystal+nGamma, 1);
-              auto crystalRId641=segmentation->setVolumeID(1, nThetaEndcap+nThetaBarrel+nThetaEndcap-iTheta, iPhi*nPhiEndcapCrystal+nGamma, 2);
-              int crystalFId321=segmentation->getFirst32bits(crystalFId641);
-              int crystalRId321=segmentation->getFirst32bits(crystalRId641);
-
-              dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
-              dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
-
-              crystalFp1.addPhysVolID("system", 1);
-              crystalFp1.addPhysVolID("eta", nThetaEndcap+nThetaBarrel+nThetaEndcap-iTheta);
-              crystalFp1.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
-              crystalFp1.addPhysVolID("depth", 1);
-
-              crystalRp1.addPhysVolID("system", 1);
-              crystalRp1.addPhysVolID("eta", nThetaEndcap+nThetaBarrel+nThetaEndcap-iTheta);
-              crystalRp1.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
-              crystalRp1.addPhysVolID("depth", 2);
-            }
-
-            // std::bitset<10> _eta(iTheta);
-            // std::bitset<10> _eta1(iTheta);
-            // std::bitset<10> _phi(iPhi*nPhiEndcapCrystal+nGamma);
-            // std::bitset<3>  depthF(1);
-            // std::bitset<3>  depthR(2);
-            // std::bitset<32> id32F(crystalFId32);
-            // std::bitset<32> id32R(crystalRId32);
-
-            // std::bitset<32> id32F1(crystalFId321);
-            // std::bitset<32> id32R1(crystalRId321);
-
-            //std::cout << "E crystalF eta: " << iTheta << " phi: " << iPhi << " depth: " << 1 << std::endl;
-            //std::cout << "E crystalF eta: " << _eta << " phi: " << _phi << " depth: " << depthF << std::endl;
-            //std::cout << "E crystalFId32: " << id32F << std::endl;
-            //std::cout << "E crystalF copyNum: " << crystalFp.copyNumber() << " VolIDs: " << dd4hep::detail::tools::toString( crystalFp.VolIDs()) << std::endl;
-
-            //std::cout << "E crystalR eta: " << iTheta << " phi: " << iPhi << " depth: " << 2 << std::endl;
-            //std::cout << "E crystalR eta: " << _eta << " phi: " << _phi << " depth: " << depthR << std::endl;
-            //std::cout << "E crystalRId32: " << id32R << std::endl;
-            //std::cout << "E crystalR copyNum: " << crystalRp.copyNumber() << " VolIDs: " << dd4hep::detail::tools::toString( crystalRp.VolIDs()) << std::endl;
-
-            //std::cout << "E crystalF1 eta: " << iTheta << " phi: " << iPhi << " depth: " << 1 << std::endl;
-            //std::cout << "E crystalF1 eta: " << _eta1 << " phi: " << _phi << " depth: " << depthF << std::endl;
-            //std::cout << "E crystalFId321: " << id32F1 << std::endl;
-            //std::cout << "E crystalF1 copyNum: " << crystalFp1.copyNumber() << " VolIDs: " << dd4hep::detail::tools::toString(crystalFp1.VolIDs()) << std::endl;
-
-            //std::cout << "E crystalR1 eta: " << iTheta << " phi: " << iPhi << " depth: " << 2 << std::endl;
-            //std::cout << "E crystalR1 eta: " << _eta1 << " phi: " << _phi << " depth: " << depthR << std::endl;
-            //std::cout << "E crystalRId321: " << id32R1 << std::endl;
-            //std::cout << "E crystalR1 copyNum: " << crystalRp1.copyNumber() << " VolIDs: " << dd4hep::detail::tools::toString(crystalRp1.VolIDs()) << std::endl;
-          }
         }
       }
-
-      // Place the detector
-      experimentalHall.placeVolume( scepcalAssemblyVol );
-
-      dd4hep::PlacedVolume hallPlace=theDetector.pickMotherVolume(drDet).placeVolume(experimentalHall);
-
-      //hallPlace.addPhysVolID("system", detectorXML.id());
-      hallPlace.addPhysVolID("system", 0);
-
-      drDet.setPlacement(hallPlace);
-
-      return drDet;
     }
+  }
+
+  // Place the detector
+  auto scepcalAssemblyVolId =segmentation->setVolumeID(3,0,0,0);
+  int scepcalAssemblyVolId32=segmentation->getFirst32bits(scepcalAssemblyVolId);
+
+  dd4hep::PlacedVolume ScepcalPlacedVol = experimentalHall.placeVolume(scepcalAssemblyVol,scepcalAssemblyVolId32);
+  ScepcalPlacedVol.addPhysVolID("system", 3);
+  Scepcal.setPlacement(ScepcalPlacedVol);
+
+  // Scepcal.addExtension< LayeredCalorimeterData >( barrelData ) ;
+
+  return Scepcal;
 }
 
-
-DECLARE_DETELEMENT(SCEPCAL, ddSCEPCAL::create_detector)
+DECLARE_DETELEMENT(SCEPCAL_BE, create_detector_BE)
