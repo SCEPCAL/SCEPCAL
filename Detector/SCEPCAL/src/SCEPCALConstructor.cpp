@@ -408,6 +408,8 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
     double RinEndcap  = EBz*tan(thC);
 
     int    nPhiEndcapCrystal = floor(2*M_PI*RinEndcap/(nPhiEndcap*nomfw));
+        std::cout << "nPhiEndcapCrystal: " << nPhiEndcapCrystal << std::endl;
+
     double dPhiEndcapCrystal = dPhiEndcap/nPhiEndcapCrystal;
 
     double r0e=RinEndcap/sin(thC);
@@ -623,7 +625,7 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   }
 
   // Place the detector
-  auto scepcalAssemblyVolId =segmentation->setVolumeID(1,0,0,0);
+  auto scepcalAssemblyVolId =segmentation->setVolumeID(3,0,0,0);
   int scepcalAssemblyVolId32=segmentation->getFirst32bits(scepcalAssemblyVolId);
 
   dd4hep::PlacedVolume ScepcalPlacedVol = experimentalHall.placeVolume(scepcalAssemblyVol,scepcalAssemblyVolId32);

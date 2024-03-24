@@ -64,28 +64,37 @@ namespace dd4hep {
     template <> bool 
     Geant4SensitiveAction<ScepcalSDContainer>::process(const G4Step* step,G4TouchableHistory* /*hist*/ ) {
 
-        // G4double edep = step->GetTotalEnergyDeposit(); //*CLHEP::MeV/CLHEP::GeV;
+        G4double edep = step->GetTotalEnergyDeposit(); //*CLHEP::MeV/CLHEP::GeV;
         // if (edep == 0.) return false;
         
         dd4hep::Segmentation* _geoSeg = &m_segmentation;
         auto segmentation=dynamic_cast<dd4hep::DDSegmentation::SCEPCALSegmentation *>(_geoSeg->segmentation());
 
+        // typedef scepcal::ScepcalHit Hit;
         typedef Geant4Calorimeter::Hit Hit;
+
         
+        // printM2("test1");
+
         Geant4StepHandler    h(step);
         Geant4TouchableHandler handler(step);
 
-        Position  prePos    = h.prePos();
-        Position  postPos   = h.postPos();
+        // Position  prePos    = h.prePos();
+        // Position  postPos   = h.postPos();
 
-        HitContribution      contrib = Hit::extractContribution(step);
+        // HitContribution      contrib = Hit::extractContribution(step);
         Geant4HitCollection* coll    = collection(m_collectionID);
+
+        // printM2("test2");
+
 
         G4StepPoint*          aPreStepPoint     = step->GetPreStepPoint();
         G4TouchableHandle     aPreStepTouchable = aPreStepPoint->GetTouchableHandle();
 
         auto copyNum64  = segmentation->convertFirst32to64(aPreStepTouchable->GetCopyNumber(0));
         int cellID = (int)copyNum64;
+
+        // printM2("test3");
 
         DDSegmentation::Vector3D pos = segmentation->myPosition(copyNum64);
 
@@ -100,37 +109,44 @@ namespace dd4hep {
                 // c_name(),segmentation->getFdz(),segmentation->getRdz(),segmentation->getnomfw(),
                 // segmentation->getnomth(),segmentation->getEBz(),segmentation->getRin());
 
+        // printM2("test4");
 
         Position global(pos.x(),pos.y(),pos.z());
 
-        // Hit* hit = nullptr;
-        Hit* hit = coll->findByKey<Hit>(cellID);
-        if ( !hit ) {
+        Hit* hit = nullptr;
+        // Hit* hit = coll->findByKey<Hit>(cellID);
+        // if ( !hit ) {
 
             hit = new Hit(global);
+            // hit->position = CLHEP::Hep3Vector(global.x(),global.y(),global.z());
+
             hit->cellID = cellID;
-            coll->add(cellID, hit);
+            hit->energyDeposit = edep;
 
-            printM2("> CREATE hit with deposit:%e MeV  prePos:%8.2f %8.2f %8.2f  %s %d %d  ",
-                    contrib.deposit,
+            // coll->add(cellID, hit);
+            coll->add(hit);
+
+            printM2("> CREATE hit with deposit:%f MeV  global:%8.2f %8.2f %8.2f  %s %d %d  ",
+                    edep,
                     global.x(),global.y(),global.z(),
                     handler.path().c_str(),
                     aPreStepTouchable->GetHistoryDepth(),
                     aPreStepTouchable->GetCopyNumber(0)
                     );
 
-        }
+        // }
 
-        hit->truth.emplace_back(contrib);
-        hit->energyDeposit += contrib.deposit;
+        // hit->truth.emplace_back(contrib);
+        // hit->energyDeposit += contrib.deposit;
+
         
-            printM2("> UPDATE hit with deposit:%e MeV  prePos:%8.2f %8.2f %8.2f  %s %d %d  ",
-                    contrib.deposit,
-                    global.x(),global.y(),global.z(),
-                    handler.path().c_str(),
-                    aPreStepTouchable->GetHistoryDepth(),
-                    aPreStepTouchable->GetCopyNumber(0)
-                    );
+            // printM2("> UPDATE hit with deposit:%e MeV  global:%8.2f %8.2f %8.2f  %s %d %d  ",
+            //         contrib.deposit,
+            //         global.x(),global.y(),global.z(),
+            //         handler.path().c_str(),
+            //         aPreStepTouchable->GetHistoryDepth(),
+            //         aPreStepTouchable->GetCopyNumber(0)
+            //         );
         
         mark(h.track);
         return true;
