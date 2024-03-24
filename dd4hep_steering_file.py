@@ -21,10 +21,10 @@ SIM.inputFiles = []
 SIM.macroFile = ""
 
 ## number of events to simulate, used in batch mode
-SIM.numberOfEvents = 10
+SIM.numberOfEvents = 1
 
 ## Outputfile from the simulation: .slcio, edm4hep.root and .root output files are supported
-SIM.outputFile = "ddsimTestScepcal.root"
+SIM.outputFile = "ddsimTestScepcal3.root"
 
 ## Physics list to use in simulation
 SIM.physicsList = None
@@ -84,9 +84,10 @@ SIM.vertexSigma = [0.0, 0.0, 0.0, 0.0]
 ################################################################################
 
 ##  set the default calorimeter action 
-SIM.action.calo = "Geant4CalorimeterAction"
+SIM.action.calo = "ScepcalSDAction"
 
 ## List of patterns matching sensitive detectors of type Calorimeter.
+# SIM.action.calorimeterSDTypes = ['ScepcalSD']
 SIM.action.calorimeterSDTypes = ['ScepcalSD']
 
 ## Create a map of patterns and actions to be applied to sensitive detectors.
@@ -95,7 +96,8 @@ SIM.action.calorimeterSDTypes = ['ScepcalSD']
 ## 
 ##       SIM.action.mapActions['tpc'] = "TPCSDAction"
 ##     
-SIM.action.mapActions = {}
+SIM.action.mapActions = { 'Scepcal' : "ScepcalSDAction" }
+# SIM.action.mapActions = {}
 
 ##  set the default tracker action 
 SIM.action.tracker = None
@@ -108,15 +110,15 @@ SIM.action.trackerSDTypes = []
 ################################################################################
 ## Configuration for the magnetic field (stepper) 
 ################################################################################
-SIM.field.delta_chord = 0.25
-SIM.field.delta_intersection = 0.001
-SIM.field.delta_one_step = 0.01
-SIM.field.eps_max = 0.001
-SIM.field.eps_min = 5e-05
-SIM.field.equation = "Mag_UsualEqRhs"
-SIM.field.largest_step = 10000.0
-SIM.field.min_chord_step = 0.01
-SIM.field.stepper = "ClassicalRK4"
+# SIM.field.delta_chord = 0.25
+# SIM.field.delta_intersection = 0.001
+# SIM.field.delta_one_step = 0.01
+# SIM.field.eps_max = 0.001
+# SIM.field.eps_min = 5e-05
+# SIM.field.equation = "Mag_UsualEqRhs"
+# SIM.field.largest_step = 10000.0
+# SIM.field.min_chord_step = 0.01
+# SIM.field.stepper = "ClassicalRK4"
 
 
 ################################################################################
@@ -215,7 +217,7 @@ SIM.guineapig.particlesPerEvent = "-1"
 ################################################################################
 
 ##  direction of the particle gun, 3 vector 
-SIM.gun.direction = (0, 0, 1)
+SIM.gun.direction = (1, 0, 0)
 
 ## choose the distribution of the random direction for theta
 ## 
@@ -249,10 +251,10 @@ SIM.gun.etaMin = None
 SIM.gun.isotrop = False
 
 ## Maximal momentum when using distribution (default = 0.0)
-SIM.gun.momentumMax = 3*GeV
+SIM.gun.momentumMax = 500*GeV
 
 ## Minimal momentum when using distribution (default = 0.0)
-SIM.gun.momentumMin = 3*GeV
+SIM.gun.momentumMin = 500*GeV
 SIM.gun.multiplicity = 1
 SIM.gun.particle = "e-"
 
@@ -266,10 +268,10 @@ SIM.gun.phiMin = None
 SIM.gun.position = (0.0, 0.0, 0.0)
 
 ## Maximal polar angle for random distribution
-SIM.gun.thetaMax = 3.1
+SIM.gun.thetaMax = 1.5
 
 ## Minimal polar angle for random distribution
-SIM.gun.thetaMin = 0.1
+SIM.gun.thetaMin = 1.51
 
 
 ################################################################################
@@ -355,13 +357,13 @@ SIM.meta.runNumberOffset = 0
 ################################################################################
 
 ## Output level for geometry.
-SIM.output.geometry = 2
+SIM.output.geometry = 3
 
 ## Output level for input sources
-SIM.output.inputStage = 3
+SIM.output.inputStage = 1
 
 ## Output level for Geant4 kernel
-SIM.output.kernel = 3
+SIM.output.kernel = 1
 
 ## Output level for ParticleHandler
 SIM.output.part = 3
@@ -434,10 +436,10 @@ SIM.part.minDistToParentVertex = 2.2e-14
 SIM.part.minimalKineticEnergy = 1.0
 
 ##  Printout at End of Tracking 
-SIM.part.printEndTracking = False
+SIM.part.printEndTracking = True
 
 ##  Printout at Start of Tracking 
-SIM.part.printStartTracking = False
+SIM.part.printStartTracking = True
 
 ## List of processes to save, on command line give as whitespace separated string in quotation marks
 SIM.part.saveProcesses = ['Decay']
@@ -485,12 +487,14 @@ SIM.physics.rangecut = 0.7
 SIM.physics.rejectPDGs = {1, 2, 3, 4, 5, 6, 3201, 3203, 4101, 4103, 21, 23, 24, 5401, 25, 
                           2203, 5403, 3101, 3103, 4403, 2101, 5301, 2103, 5303, 4301, 1103, 
                           4303, 5201, 5203, 3303, 4201, 4203, 5101, 5103, 5503}
+# SIM.physics.rejectPDGs = {1,2,3,4,5,6} 
 
 ## Set of PDG IDs for particles that should not be passed to Geant4 if their properTime is 0.
 ## 
 ##     The properTime of 0 indicates a documentation to add FSR to a lepton for example.
 ##     
-SIM.physics.zeroTimePDGs = {17, 11, 13, 15}
+# SIM.physics.zeroTimePDGs = {17, 11, 13, 15}
+SIM.physics.zeroTimePDGs = {17, 13, 15}
 
 
 ################################################################################

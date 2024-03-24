@@ -64,10 +64,12 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   dd4hep::xml::Dimension sdType = detectorXML.child(_Unicode(sensitive));
   sens.setType(sdType.typeStr());
 
+  std::cout << "Sensitive Detector Type: " << sdType.typeStr() << std::endl;
+
   dd4hep::Box scepcalAssemblyShape(Rin+2*Fdz+2*Rdz, Rin+2*Fdz+2*Rdz, 2*EBz+2*Fdz+2*Rdz);
   dd4hep::Volume scepcalAssemblyVol("scepcalAssemblyVol", scepcalAssemblyShape, theDetector.material("Vacuum"));
   scepcalAssemblyVol.setVisAttributes(theDetector, scepcalAssemblyGlobalVisXML.visStr());
-  scepcalAssemblyVol.setSensitiveDetector(sens);
+  // scepcalAssemblyVol.setSensitiveDetector(sens);
 
   // Initialize the segmentation
   dd4hep::Readout readout = sens.readout();
@@ -189,6 +191,9 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
         // Place volumes and ID them
         dd4hep::PlacedVolume timingLgp = timingAssemblyVolume.placeVolume( timingCrystalLgVol, timingLgId32, Transform3D(rotTiming,dispLg) );
         dd4hep::PlacedVolume timingTrp = timingAssemblyVolume.placeVolume( timingCrystalTrVol, timingTrId32, Transform3D(rotTiming,dispTr) );
+
+        if (!timingLgp.volume().isSensitive()) timingLgp.volume().setSensitiveDetector(sens);
+        if (!timingTrp.volume().isSensitive()) timingLgp.volume().setSensitiveDetector(sens);
 
         timingLgp.addPhysVolID("system", 1);
         timingLgp.addPhysVolID("eta", nTile*nCy +nC);
@@ -350,6 +355,9 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
         // Place volumes and ID them
         dd4hep::PlacedVolume crystalFp = barrelSliceAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF) );
         dd4hep::PlacedVolume crystalRp = barrelSliceAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR) );
+
+        if (!crystalFp.volume().isSensitive()) crystalFp.volume().setSensitiveDetector(sens);
+        if (!crystalRp.volume().isSensitive()) crystalRp.volume().setSensitiveDetector(sens);
 
         crystalFp.addPhysVolID("system", 1);
         crystalFp.addPhysVolID("eta", nThetaEndcap+iTheta);
@@ -543,6 +551,9 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
         dd4hep::PlacedVolume crystalFp = phiRingAssemblyVolume.placeVolume( crystalFVol, crystalFId32, Transform3D(rot,dispF-dispCone) );
         dd4hep::PlacedVolume crystalRp = phiRingAssemblyVolume.placeVolume( crystalRVol, crystalRId32, Transform3D(rot,dispR-dispCone) );
 
+        if (!crystalFp.volume().isSensitive()) crystalFp.volume().setSensitiveDetector(sens);
+        if (!crystalRp.volume().isSensitive()) crystalRp.volume().setSensitiveDetector(sens);
+
         crystalFp.addPhysVolID("system", 1);
         crystalFp.addPhysVolID("eta", iTheta);
         crystalFp.addPhysVolID("phi", iPhi*nPhiEndcapCrystal+nGamma);
@@ -562,6 +573,9 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
 
           dd4hep::PlacedVolume crystalFp1 = phiRingAssemblyVolume1.placeVolume( crystalFVol, crystalFId321, Transform3D(rot,dispF-dispCone) );
           dd4hep::PlacedVolume crystalRp1 = phiRingAssemblyVolume1.placeVolume( crystalRVol, crystalRId321, Transform3D(rot,dispR-dispCone) );
+
+          if (!crystalFp1.volume().isSensitive()) crystalFp1.volume().setSensitiveDetector(sens);
+          if (!crystalRp1.volume().isSensitive()) crystalRp1.volume().setSensitiveDetector(sens);
 
           crystalFp1.addPhysVolID("system", 1);
           crystalFp1.addPhysVolID("eta", nThetaEndcap+nThetaBarrel+nThetaEndcap-iTheta);
@@ -609,11 +623,11 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   }
 
   // Place the detector
-  auto scepcalAssemblyVolId =segmentation->setVolumeID(3,0,0,0);
+  auto scepcalAssemblyVolId =segmentation->setVolumeID(1,0,0,0);
   int scepcalAssemblyVolId32=segmentation->getFirst32bits(scepcalAssemblyVolId);
 
   dd4hep::PlacedVolume ScepcalPlacedVol = experimentalHall.placeVolume(scepcalAssemblyVol,scepcalAssemblyVolId32);
-  ScepcalPlacedVol.addPhysVolID("system", 3);
+  ScepcalPlacedVol.addPhysVolID("system", 1);
   Scepcal.setPlacement(ScepcalPlacedVol);
 
   return Scepcal;

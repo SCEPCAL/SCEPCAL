@@ -21,17 +21,22 @@
 // }
 
 namespace det {
+
 class ScepcalSD : public G4VSensitiveDetector {
 
 public:
+    // ScepcalSD();
 
     ScepcalSD(const std::string& aDetectorName, 
               const std::string& aReadoutName, 
               const dd4hep::Segmentation& aSeg);
+
     virtual ~ScepcalSD();
 
     virtual void Initialize(G4HCofThisEvent* aHitsCollections) final;
     virtual bool ProcessHits(G4Step* aStep, G4TouchableHistory*) final;
+
+    // inline int testNumber() {return 9989; }
 
 private:
 

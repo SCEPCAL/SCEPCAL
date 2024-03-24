@@ -11,6 +11,9 @@ static G4VSensitiveDetector* create_scepcal_sd(const std::string& aDetectorName,
   std::string readoutName = aLcdd.sensitiveDetector(aDetectorName).readout().name();
   return new det::ScepcalSD(
     aDetectorName,readoutName,aLcdd.sensitiveDetector(aDetectorName).readout().segmentation());
+
+  std::cout << "Creating ScepcalSD Factory Method" << std::endl;
+
 }
 
 }

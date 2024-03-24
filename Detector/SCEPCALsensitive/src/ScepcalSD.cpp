@@ -21,6 +21,10 @@
 
 namespace det {
 
+// ScepcalSD::ScepcalSD() {
+    // fSeg = dd4hep::DDSegmentation::SCEPCALSegmentation* ;
+// }
+
 ScepcalSD::ScepcalSD(const std::string& aDetectorName,
                      const std::string& aReadoutName,
                      const dd4hep::Segmentation& aSeg)
@@ -40,6 +44,8 @@ void ScepcalSD::Initialize(G4HCofThisEvent* aHitsCollections) {
     // deleted in ~G4Event
     m_calorimeterCollection = new G4THitsCollection<scepcal::ScepcalHit>(SensitiveDetectorName, collectionName[0]);
     m_hitExists = new std::unordered_map<int, scepcal::ScepcalHit*>();
+
+    std::cout << "ScepcalSD Initialize" << std::endl;
 
     aHitsCollections->AddHitsCollection(G4SDManager::GetSDMpointer()->GetCollectionID(m_calorimeterCollection),
                                       m_calorimeterCollection);
@@ -65,7 +71,11 @@ bool ScepcalSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
     scepcal::ScepcalHit* newHit = nullptr;
     scepcal::ScepcalHit* hitMatch = nullptr;
 
+    std::cout << "ScepcalSD Process hits" << std::endl;
+
     if (m_hitExists->count(cellID) == 0) { //Add if not found
+
+        std::cout << "new hit" << std::endl;
 
         newHit = new scepcal::ScepcalHit();
 
