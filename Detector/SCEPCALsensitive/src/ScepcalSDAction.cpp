@@ -126,13 +126,13 @@ namespace dd4hep {
             // coll->add(cellID, hit);
             coll->add(hit);
 
-            printM2("> CREATE hit with deposit:%f MeV  global:%8.2f %8.2f %8.2f  %s %d %d  ",
-                    edep,
-                    global.x(),global.y(),global.z(),
-                    handler.path().c_str(),
-                    aPreStepTouchable->GetHistoryDepth(),
-                    aPreStepTouchable->GetCopyNumber(0)
-                    );
+            // printM2("> CREATE hit with deposit:%f MeV  global:%8.2f %8.2f %8.2f  %s %d %d  ",
+                    // edep,
+                    // global.x(),global.y(),global.z(),
+                    // handler.path().c_str(),
+                    // aPreStepTouchable->GetHistoryDepth(),
+                    // aPreStepTouchable->GetCopyNumber(0)
+                    // );
 
         // }
 

@@ -11,11 +11,11 @@ SIM.crossingAngleBoost = 0.0
 SIM.enableDetailedShowerMode = False
 SIM.enableG4GPS = False
 SIM.enableG4Gun = False
-SIM.enableGun = True
+SIM.enableGun = False
 
 ## InputFiles for simulation .stdhep, .slcio, .HEPEvt, .hepevt, .pairs, .hepmc, .hepmc.gz, .hepmc.xz, 
 ## .hepmc.bz2, .hepmc3, .hepmc3.gz, .hepmc3.xz, .hepmc3.bz2, .hepmc3.tree.root files are supported
-SIM.inputFiles = []
+SIM.inputFiles = ['wzp6_ee_ZZ_test_ecm240_10.stdhep']
 
 ## Macro file to execute for runType 'run' or 'vis'
 SIM.macroFile = ""
@@ -24,7 +24,7 @@ SIM.macroFile = ""
 SIM.numberOfEvents = 1
 
 ## Outputfile from the simulation: .slcio, edm4hep.root and .root output files are supported
-SIM.outputFile = "ddsimTestScepcal3.root"
+SIM.outputFile = "wzp6_ee_ZZ_test_ecm240_test1_FG.root"
 
 ## Physics list to use in simulation
 SIM.physicsList = None

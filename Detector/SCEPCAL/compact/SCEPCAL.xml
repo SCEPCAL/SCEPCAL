@@ -959,9 +959,9 @@
 
       <dim    barrelHalfZ="2.25*m"
               barrelInnerR="2*m" 
-              crystalFaceWidthNominal="50*mm" 
+              crystalFaceWidthNominal="10*mm" 
               crystalTimingThicknessNominal="10*mm"
-              phiSegments="16"
+              phiSegments="36"
       />
 
       <crystalF       length="50*mm"      material="PbWO"          vis="crystalFVis"/>
