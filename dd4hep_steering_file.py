@@ -21,17 +21,17 @@ SIM.inputFiles = ['wzp6_ee_ZZ_test_ecm240_10.stdhep']
 SIM.macroFile = ""
 
 ## number of events to simulate, used in batch mode
-SIM.numberOfEvents = 1
+SIM.numberOfEvents = 10
 
 ## Outputfile from the simulation: .slcio, edm4hep.root and .root output files are supported
-SIM.outputFile = "wzp6_ee_ZZ_test_ecm240_test1_FG.root"
+SIM.outputFile = "wzp6_ee_ZZ_test_ecm240_test10_FG.root"
 
 ## Physics list to use in simulation
 SIM.physicsList = None
 
 ## Verbosity use integers from 1(most) to 7(least) verbose
 ## or strings: VERBOSE, DEBUG, INFO, WARNING, ERROR, FATAL, ALWAYS
-SIM.printLevel = 1
+SIM.printLevel = 3
 
 ## The type of action to do in this invocation
 ## batch: just simulate some events, needs numberOfEvents, and input file or gun

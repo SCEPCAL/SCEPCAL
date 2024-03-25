@@ -402,13 +402,13 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
     * 
     * **/
 
-  for (int iTheta=5; iTheta<nThetaEndcap; iTheta++) {
+  for (int iTheta=10; iTheta<nThetaEndcap; iTheta++) {
 
     double thC        = dThetaEndcap/2+ iTheta*dThetaEndcap;
     double RinEndcap  = EBz*tan(thC);
 
     int    nPhiEndcapCrystal = floor(2*M_PI*RinEndcap/(nPhiEndcap*nomfw));
-        std::cout << "nPhiEndcapCrystal: " << nPhiEndcapCrystal << std::endl;
+std::cout << "iTheta: " << iTheta << "nPhiEndcapCrystal: " << nPhiEndcapCrystal << std::endl;
 
     double dPhiEndcapCrystal = dPhiEndcap/nPhiEndcapCrystal;
 
