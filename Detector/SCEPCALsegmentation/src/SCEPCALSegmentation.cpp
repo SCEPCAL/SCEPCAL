@@ -261,40 +261,6 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         }
 
 /**
-        // nTheta always positive, so that thC is going from 0 to pi.
-        // [0,pi/2) --> z, eta positive ; (pi/2,pi] --> z,eta negative; pi/2 (cos(theta) = 0) is excluded
-        // int nTheta = (nThetaBarrel+nThetaEndcap)-nEta_in;
-        // double thC=nTheta*dTheta;
-            
-        //phi should run form 0 to 2pi, so that x,y are both neg and positive.
-        // double phi=nPhi_in*dPhi;
-
-        //double r0=EBz/cos(thC); // May be this is the case for the endcaps
-        // for EE fixed proj along EBz of r0, while for EB proj along transv plane is fixed:
-        // double r0 = abs(nEta_in) > nThetaBarrel ? EBz/abs(cos(thC)) : Rin/abs(sin(thC));
-
-        //double r1=r0+Fdz;
-        //double r2=r1+Rdz;
-        // double rF=r0+Fdz/2; // r is connecting the IP to center of crystal
-        // double rR=rF+Rdz/2;
-
-        //double R=nDepth_in==1 ? (r0+r1)/2 : (r1+r2)/2;
-        // double R=nDepth_in==1 ? rF : rR;
-        // double x=R*sin(thC)*cos(phi);
-        // double y=R*sin(thC)*sin(phi);
-        // double z=R*cos(thC);
-
-        //std::cout << "These are nEta_in :: " << nEta_in << " Phi_in ::" << nPhi_in << " Depth :: " << nDepth_in << std::endl;
-        //std::cout << "So these are nTheta :: " << nTheta << "and nPhi:: "<< nPhi_in << std::endl;
-        //std::cout << "rF :: " << rF << " rR:: " << rR << std::endl;
-        //std::cout << "... theta :: " << thC <<  "and  R :: " << R <<  "... finally cos(theta),sin(theta) :: " << cos(thC) << "," << sin(thC) << std::endl;
-        //std::cout << "... phi   :: " << phi <<  "and  R :: " << R <<  "... finally cos(phi),sin(phi) :: " << cos(phi) << "," <<  sin(phi) << std::endl;
-        //std::cout << "to get  z=R*cos(theta)= " << z << " and y=R*sin(theta)*sin(phi)= " << y <<  " and x=R*sin(theta)*cos(phi)= " << x << std::endl;
-
-        // ROOT::Math::XYZVector position(x, y, z);
-        // fPositionOf.emplace(copyNum,position);
-
-
         // To test positions in detector constructor
 
         // int nEta_in = nTile*nCy +nC;
@@ -316,6 +282,9 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         // dd4hep::Volume testBoxVol("BarrelCrystalF", testBox, timingLgMat);
         // testBoxVol.setVisAttributes(theDetector, timingLgXML.visStr());
         // dd4hep::PlacedVolume timingLgp = scepcalAssemblyVol.placeVolume( testBoxVol, timingLgId32,  dispTimingAssembly+rotPhi*dispLgt );
+
+
+
 
         // Position dispGamma(0, rF*sin(thC)*tan(gamma), 0);
         // Position dispFt(rF*sin(thC)*cos(phi),
