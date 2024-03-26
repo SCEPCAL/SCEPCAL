@@ -89,7 +89,7 @@ SIM.meta.runNumberOffset = 0
 SIM.output.geometry = 4
 SIM.output.inputStage = 4
 SIM.output.kernel = 4
-SIM.output.part = 4
+SIM.output.part = 7
 SIM.output.random = 6
 
 SIM.outputConfig.forceDD4HEP = False

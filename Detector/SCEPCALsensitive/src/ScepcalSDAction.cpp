@@ -91,7 +91,7 @@ namespace dd4hep {
         hit->truth.emplace_back(contrib);
         hit->energyDeposit = edep; //contrib.deposit;
 
-        coll->add(cellID, hit);
+        coll->add(hit);
 
         mark(h.track);
         return true;
