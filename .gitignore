@@ -1,4 +1,6 @@
 *.stdhep
+*.slcio
+*.log
 .idea
 build.nix
 *.root
