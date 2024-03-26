@@ -26,6 +26,8 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   // Import xml objects from compact xml
   xml_det_t detectorXML                   = xmlElement;
   xml_comp_t dimXML                       = detectorXML.child(_Unicode(dim));
+  xml_comp_t barrelXML                    = detectorXML.child(_Unicode(barrel));
+  xml_comp_t endcapXML                    = detectorXML.child(_Unicode(endcap));
   xml_comp_t crystalFXML                  = detectorXML.child(_Unicode(crystalF));
   xml_comp_t crystalRXML                  = detectorXML.child(_Unicode(crystalR));
   xml_comp_t timingTrXML                  = detectorXML.child(_Unicode(timingLayerTr));
@@ -51,6 +53,18 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   const double Rin      = dimXML.attr<double>(_Unicode(barrelInnerR));
   const int    phiSegments = dimXML.attr<int>(_Unicode(phiSegments));
   const int  debugLevel = printDebugXML.attr<bool>(_Unicode(level));
+
+  const bool CONSTRUCT_BARREL = barrelXML.attr(bool>(_Unicode(construct)));
+  const bool BARREL_PHI_START = barrelXML.attr(int>(_Unicode(phistart)));
+  const bool BARREL_PHI_END   = barrelXML.attr(int>(_Unicode(phiend)));
+
+  const bool CONSTRUCT_ENDCAP = endcapXML.attr(bool>(_Unicode(construct)));
+  const bool ENDCAP_PHI_START = endcapXML.attr(int>(_Unicode(phistart)));
+  const bool ENDCAP_PHI_END   = endcapXML.attr(int>(_Unicode(phiend)));
+  
+  const bool ENDCAP_THETA_START = endcapXML.attr(int>(_Unicode(thetastart)));
+
+  const bool REFLECT_ENDCAP   = endcapXML.attr(bool>(_Unicode(reflect)));
 
   //-----------------------------------------------------------------------------------
   // Initialize detector element
@@ -82,8 +96,6 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   // Begin geometry calculations
   //-----------------------------------------------------------------------------------
 
-  bool ReflectEndcap = true;
-
   // Need odd number of nThetaBarrel to make center crystal
   int nThetaBarrel  =int(floor(2*EBz/nomfw))%2==1? floor(2*EBz/nomfw) : floor(2*EBz/nomfw)-1 ;
   int nThetaEndcap  =floor(Rin/nomfw);
@@ -108,7 +120,7 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
     * 
     * **/
 
-  for (int iPhi=0; iPhi<nPhiBarrel; iPhi++) {
+  for (int iPhi= CONSTRUCT_BARREL? BARREL_PHI_START:BARREL_PHI_END ; iPhi<BARREL_PHI_END ; iPhi++) {
 
     if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
 
@@ -402,13 +414,13 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
     * 
     * **/
 
-  for (int iTheta=10; iTheta<nThetaEndcap; iTheta++) {
+  for (int iTheta=CONSTRUCT_ENDCAP? ENDCAP_THETA_START:nThetaEndcap ; iTheta<nThetaEndcap ; iTheta++) {
 
     double thC        = dThetaEndcap/2+ iTheta*dThetaEndcap;
     double RinEndcap  = EBz*tan(thC);
 
     int    nPhiEndcapCrystal = floor(2*M_PI*RinEndcap/(nPhiEndcap*nomfw));
-std::cout << "iTheta: " << iTheta << "nPhiEndcapCrystal: " << nPhiEndcapCrystal << std::endl;
+    // std::cout << "iTheta: " << iTheta << " nPhiEndcapCrystal: " << nPhiEndcapCrystal << std::endl;
 
     double dPhiEndcapCrystal = dPhiEndcap/nPhiEndcapCrystal;
 
@@ -453,11 +465,11 @@ std::cout << "iTheta: " << iTheta << "nPhiEndcapCrystal: " << nPhiEndcapCrystal 
     // Reflected endcap
     dd4hep::Volume phiRingAssemblyVolume1("EndcapRingAssembly1", phiRingAssemblyShape, theDetector.material("Vacuum"));
     phiRingAssemblyVolume1.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
-    if (ReflectEndcap == true) {
+    if (REFLECT_ENDCAP) {
       scepcalAssemblyVol.placeVolume( phiRingAssemblyVolume1, Transform3D(rotMirror, dispCone1) );
     }
 
-    for (int iPhi=0; iPhi<nPhiEndcap; iPhi++) {
+    for (int iPhi=ENDCAP_PHI_START ; iPhi<ENDCAP_PHI_END ; iPhi++) {
       
       for (int nGamma=0; nGamma<nPhiEndcapCrystal; nGamma++) {
 
@@ -567,7 +579,7 @@ std::cout << "iTheta: " << iTheta << "nPhiEndcapCrystal: " << nPhiEndcapCrystal 
         crystalRp.addPhysVolID("depth", 2);
 
         // Add suffix 1 for the other endcap (mirrored)
-        if (ReflectEndcap == true) {
+        if (REFLECT_ENDCAP) {
           auto crystalFId641=segmentation->setVolumeID(1, nThetaEndcap+nThetaBarrel+nThetaEndcap-iTheta, iPhi*nPhiEndcapCrystal+nGamma, 1);
           auto crystalRId641=segmentation->setVolumeID(1, nThetaEndcap+nThetaBarrel+nThetaEndcap-iTheta, iPhi*nPhiEndcapCrystal+nGamma, 2);
           int crystalFId321=segmentation->getFirst32bits(crystalFId641);

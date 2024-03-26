@@ -15,7 +15,7 @@ SIM.enableGun = False
 
 ## InputFiles for simulation .stdhep, .slcio, .HEPEvt, .hepevt, .pairs, .hepmc, .hepmc.gz, .hepmc.xz, 
 ## .hepmc.bz2, .hepmc3, .hepmc3.gz, .hepmc3.xz, .hepmc3.bz2, .hepmc3.tree.root files are supported
-SIM.inputFiles = ['wzp6_ee_ZZ_test_ecm240_10.stdhep']
+SIM.inputFiles = ['wzp6_ee_ZZ_test_ecm240_1k.stdhep']
 
 ## Macro file to execute for runType 'run' or 'vis'
 SIM.macroFile = ""
