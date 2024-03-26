@@ -939,11 +939,11 @@
     <vis name="crystalFVis"  alpha="1"   r="0.0"  g="0.0"  b="1.0"  showDaughters="true"  visible="true"/>
     <vis name="crystalRVis"  alpha="1"   r="0.0"  g="0.5"  b="1.0"  showDaughters="true"  visible="true"/>
     <vis name="timingVisTr"  alpha="1"   r="0.0"  g="1.0"  b="0.1"  showDaughters="true"  visible="true"/>
-    <vis name="timingVisLg"  alpha="0.3" r="1.0"  g="0.3"  b="0.0"  showDaughters="true"  visible="true"/>
-    <vis name="instVis"      alpha="1.0" r="0.1"  g="0.1"  b="0.1"  showDaughters="true"  visible="true"/>
+    <vis name="timingVisLg"  alpha="1"   r="1.0"  g="0.3"  b="0.0"  showDaughters="true"  visible="true"/>
+    <vis name="instVis"      alpha="0"   r="0.1"  g="0.1"  b="0.1"  showDaughters="true"  visible="false"/>
 
-    <vis name="scepcalAssemblyVis"  alpha="0.1" r="0.3"  g="0.2"  b="0.2"  showDaughters="true"  visible="true"/>
-    <vis name="scepcalAssemblyGlobalVis"  alpha="0.1" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="true"/>
+    <vis name="scepcalAssemblyVis"  alpha="0" r="0.3"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
+    <vis name="scepcalAssemblyGlobalVis"  alpha="0" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
 
   </display>
 
@@ -956,15 +956,22 @@
     <detector id="2" name="Scepcal" type="SCEPCAL" readout="SCEPCALreadout" vis="scepcalAssemblyGlobalVis" sensitive="true">
 
       <sensitive type="ScepcalSD"/>
-      <barrel construct="true" phistart="0" phiend="1"/>
-      <endcap construct="true" reflect="true" phistart="0" phiend="1" thetastart="15"/>
+      
+      <barrel construct="true" 
+        phistart="0" phiend="32"
+      />
+
+      <endcap construct="true" reflect="true" 
+        phistart="0" phiend="32" 
+        thetastart="15"
+      />
 
 
       <dim    barrelHalfZ="2.25*m"
               barrelInnerR="2*m" 
               crystalFaceWidthNominal="10*mm" 
               crystalTimingThicknessNominal="10*mm"
-              phiSegments="36"
+              phiSegments="32"
       />
 
       <crystalF       length="50*mm"      material="PbWO"          vis="crystalFVis"/>

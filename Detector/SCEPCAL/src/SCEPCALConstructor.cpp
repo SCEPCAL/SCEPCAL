@@ -51,20 +51,21 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   const double nomth    = dimXML.attr<double>(_Unicode(crystalTimingThicknessNominal));
   const double EBz      = dimXML.attr<double>(_Unicode(barrelHalfZ));
   const double Rin      = dimXML.attr<double>(_Unicode(barrelInnerR));
-  const int    phiSegments = dimXML.attr<int>(_Unicode(phiSegments));
-  const int  debugLevel = printDebugXML.attr<bool>(_Unicode(level));
+  const int  debugLevel = printDebugXML.attr<int>(_Unicode(level));
 
-  const bool CONSTRUCT_BARREL = barrelXML.attr(bool>(_Unicode(construct)));
-  const bool BARREL_PHI_START = barrelXML.attr(int>(_Unicode(phistart)));
-  const bool BARREL_PHI_END   = barrelXML.attr(int>(_Unicode(phiend)));
+  const int   phiSegments = dimXML.attr<int>(_Unicode(phiSegments));
 
-  const bool CONSTRUCT_ENDCAP = endcapXML.attr(bool>(_Unicode(construct)));
-  const bool ENDCAP_PHI_START = endcapXML.attr(int>(_Unicode(phistart)));
-  const bool ENDCAP_PHI_END   = endcapXML.attr(int>(_Unicode(phiend)));
+  const bool CONSTRUCT_BARREL = barrelXML.attr<bool>(_Unicode(construct));
+  const int  BARREL_PHI_START = barrelXML.attr<int>(_Unicode(phistart));
+  const int  BARREL_PHI_END   = barrelXML.attr<int>(_Unicode(phiend));
+
+  const bool CONSTRUCT_ENDCAP = endcapXML.attr<bool>(_Unicode(construct));
+  const int  ENDCAP_PHI_START = endcapXML.attr<int>(_Unicode(phistart));
+  const int  ENDCAP_PHI_END   = endcapXML.attr<int>(_Unicode(phiend));
   
-  const bool ENDCAP_THETA_START = endcapXML.attr(int>(_Unicode(thetastart)));
+  const int  ENDCAP_THETA_START = endcapXML.attr<int>(_Unicode(thetastart));
 
-  const bool REFLECT_ENDCAP   = endcapXML.attr(bool>(_Unicode(reflect)));
+  const bool REFLECT_ENDCAP   = endcapXML.attr<bool>(_Unicode(reflect));
 
   //-----------------------------------------------------------------------------------
   // Initialize detector element
@@ -120,9 +121,12 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
     * 
     * **/
 
+    std::cout << "CONSTRUCT_BARREL:  " << CONSTRUCT_BARREL << std::endl;
+    std::cout << "BARREL_PHI_START:  " << BARREL_PHI_START << std::endl;
+    std::cout << "BARREL_PHI_END  :  " << BARREL_PHI_END   << std::endl;
   for (int iPhi= CONSTRUCT_BARREL? BARREL_PHI_START:BARREL_PHI_END ; iPhi<BARREL_PHI_END ; iPhi++) {
 
-    if (debugLevel>1) std::cout << "Barrel: phi: " << iPhi << std::endl;
+    std::cout << "Barrel iPhi: " << iPhi << std::endl;
 
     // Shared calculations for timing layer and barrel envelopes
     double thC_end = thetaSizeEndcap+dThetaBarrel/2;
