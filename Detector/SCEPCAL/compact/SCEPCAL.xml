@@ -27,7 +27,7 @@
   <readouts>
     <readout name="SCEPCALreadout">
       <segmentation type="SCEPCALSegmentation"/>
-      <id>system:5,eta:-11,phi:12,depth:3</id>
+      <id>system:4,eta:12,phi:12,depth:2</id>
     </readout>
   </readouts>
 
@@ -947,9 +947,15 @@
 
   </display>
 
-  <field name="MyMagnet" type="ConstantField" field="magnetic">
-    <strength x="0" y="0" z="0"/>
-  </field>
+  <!-- <fields>
+    <field name="GlobalSolenoid"
+    type="solenoid"
+    inner_field="4.0*tesla"
+    outer_field="-1.5*tesla"
+    zmax="2.5*m"
+    outer_radius="2.2*m">
+    </field>
+  </fields> -->
 
   <detectors>
 

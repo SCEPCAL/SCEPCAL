@@ -38,119 +38,100 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
 
     int copyNum = (int)cID;
 
-    // // now in mm
-    // double Fdz= f_Fdz; // getFdz();
-    // double Rdz= f_Rdz; // getRdz();
-    // double nomfw= f_nomfw; // getnomfw();
-    // double nomth= f_nomth; // getnomth();
-    // double EBz= f_EBz; // getEBz();
-    // double Rin= f_Rin; // getRin();
-    // int phiSegments= f_phiSegments; // getphiSegments();
-
     // now in mm
-    double Fdz= getFdz();
-    double Rdz= getRdz();
-    double nomfw= getnomfw();
-    double nomth= getnomth();
-    double EBz= getEBz();
-    double Rin= getRin();
-    int phiSegments= getphiSegments();
+    double Fdz      = getFdz();
+    double Rdz      = getRdz();
+    double nomfw    = getnomfw();
+    double nomth    = getnomth();
+    double EBz      = getEBz();
+    double Rin      = getRin();
+    int PHI_SEGMENTS = getphiSegments();
 
-// std::cout << "Fdz: " << Fdz << std::endl;
-// std::cout << "Rdz: " << Rdz << std::endl;
-// std::cout << "nomfw: " << nomfw << std::endl;
-// std::cout << "nomth: " << nomth << std::endl;
-// std::cout << "EBz: " << EBz << std::endl;
-// std::cout << "Rin: " << Rin << std::endl;
-// std::cout << "phiSegments: " << phiSegments << std::endl;
-
-
-    int system=System(copyNum);
-    int nEta_in=Eta(copyNum);
-    int nPhi_in=Phi(copyNum);
-    int nDepth_in=Depth(copyNum);
-
-    // std::cout << "Segmentation: " << system << " " << nEta_in << " " << nPhi_in << " " << nDepth_in << std::endl;
+    int system      = System(copyNum);
+    int nEta_in     = Eta(copyNum);
+    int nPhi_in     = Phi(copyNum);
+    int nDepth_in   = Depth(copyNum);
 
     if (system==3) return Vector3D(0,0,0);
 
     // if (fPositionOf.count(copyNum) == 0) { //Add if not found
 
-        //int system=(copyNum)&(32-1);
-        //int nEta_in=(copyNum>>5)&(1024-1);
-        //int nPhi_in=(copyNum>>15)&(1024-1);
-        //int nDepth_in=(copyNum>>25)&(8-1);
+    //-----------------------------------------------------------------------------------
+    // Global geometry numbers
+    //-----------------------------------------------------------------------------------
 
+        double  D_PHI_GLOBAL = 2*M_PI/PHI_SEGMENTS;
 
-        // Begin geometry calculations
+        // Need odd number of N_THETA_BARREL to make center slice
+        double  THETA_SIZE_ENDCAP     = atan(Rin/EBz);
 
-        // Need odd number of nThetaBarrel to make center crystal
-        int nThetaBarrel  =int(floor(2*EBz/nomfw))%2==1? floor(2*EBz/nomfw) : floor(2*EBz/nomfw)-1 ;
-        int nThetaEndcap  =floor(Rin/nomfw);
+        int     N_THETA_BARREL        = int(floor(2*EBz/nomfw))%2==1? floor(2*EBz/nomfw) : floor(2*EBz/nomfw)-1 ;
+        int     N_THETA_ENDCAP        = floor(Rin/nomfw);
 
-        double thetaSizeEndcap=atan(Rin/EBz);
+        double  D_THETA_BARREL        = (M_PI-2*THETA_SIZE_ENDCAP)/(N_THETA_BARREL);
+        double  D_THETA_ENDCAP        = THETA_SIZE_ENDCAP/N_THETA_ENDCAP;
 
-        double dThetaBarrel =(M_PI-2*thetaSizeEndcap)/(nThetaBarrel);
-        double dThetaEndcap =thetaSizeEndcap/nThetaEndcap;
+        int     N_PHI_BARREL_CRYSTAL  = floor(2*M_PI*Rin/(PHI_SEGMENTS*nomfw));
+        double  D_PHI_BARREL_CRYSTAL  = D_PHI_GLOBAL/N_PHI_BARREL_CRYSTAL;
 
-        int    nPhiBarrel = phiSegments;
-        double dPhiBarrel = 2*M_PI/nPhiBarrel;
+        //-----------------------------------------------------------------------------------
+        // Barrel + Timing
+        //-----------------------------------------------------------------------------------
 
-        int    nPhiEndcap = nPhiBarrel;
-        double dPhiEndcap = dPhiBarrel;
-        
-        int    nPhiBarrelCrystal   =floor(2*M_PI*Rin/(nPhiBarrel*nomfw));
-        double dPhiBarrelCrystal   =dPhiBarrel/nPhiBarrelCrystal;
+        // Barrel envelope
+        double thC_end          = THETA_SIZE_ENDCAP+D_THETA_BARREL/2;
 
-        // Shared calculations for timing layer and barrel envelopes
-        double thC_end = thetaSizeEndcap+dThetaBarrel/2;
+        double r0slice_end      = Rin/sin(thC_end);
+        double y0slice_end      = r0slice_end*tan(D_THETA_BARREL/2.);
+        double slice_front_jut  = y0slice_end*sin(M_PI/2-thC_end);
 
-        double r0slice_end =Rin/sin(thC_end);
-        double y0slice_end =r0slice_end*tan(dThetaBarrel/2.);
-        double slice_front_jut = y0slice_end*sin(M_PI/2-thC_end);
+        double z1slice          = Rin -slice_front_jut;
+        double z2slice          = Rin +Fdz +Rdz +slice_front_jut;
 
-        double z1slice =Rin -slice_front_jut;
-        double z2slice =Rin +Fdz +Rdz +slice_front_jut;
-
-        double y1slice =z1slice*tan(M_PI/2-thetaSizeEndcap);
+        double y1slice          = z1slice*tan(M_PI/2-THETA_SIZE_ENDCAP);
 
         // Timing layer
-        if (nDepth_in==0) {
+        if (nDepth_in==0 || nDepth_in==3) {
 
-            double phi=nPhi_in*dPhiBarrel;
+            double phiTiming=nPhi_in*D_PHI_GLOBAL;
 
-            double rT = z1slice -2*nomth;
-            double w  = rT *tan(dPhiBarrel/2);
-            int nTiles= ceil(y1slice/w);
-            double lT = 2*y1slice/nTiles;
-            int nCy = floor(lT/nomth);
-            double actY = lT/nCy;
-            double actX = 2*w/nCy; 
+            // Timing layer envelope
+            double  rT      = z1slice -2*nomth;
+            double  wT      = rT *tan(D_PHI_GLOBAL/2);
+            int     nTiles  = ceil(y1slice/wT);
+            double  lT      = 2*y1slice/nTiles;
+            int     nCy     = floor(lT/nomth);
+            double  actY    = lT/nCy;
+            double  actX    = 2*wT/nCy; 
 
             double rTimingAssembly = rT+nomth;
-            ROOT::Math::XYZVector dispTimingAssembly(rTimingAssembly*cos(phi),
-                                        rTimingAssembly*sin(phi),
+            ROOT::Math::XYZVector dispTimingAssembly(rTimingAssembly*cos(phiTiming),
+                                        rTimingAssembly*sin(phiTiming),
                                         0);
 
             int nTile = int(nEta_in/nCy);
             int nC = nEta_in - nTile*nCy;
 
-            int phiSign =    nPhi_in%2==0? 1:-1;
+            int phiTimingSign =    nPhi_in%2==0? 1:-1;
             int sign    = abs(nTile)%2==0? 1:-1;
 
-            ROOT::Math::RotationZ rotZ(phi);
+            ROOT::Math::RotationZ rotZ(phiTiming);
 
-            if (nTile>0) {
-                ROOT::Math::XYZVector dispLg(sign*phiSign*(nomth/2),
-                                -w +actX/2 + abs(nC)*actX,
+            // if (nTile>0) {
+            if (nDepth_in==0) {
+
+                ROOT::Math::XYZVector dispLg(sign*phiTimingSign*(nomth/2),
+                                -wT +actX/2 + abs(nC)*actX,
                                 -y1slice +abs(nTile)*lT + lT/2
                                 );
                 // fPositionOf.emplace(copyNum,dispTimingAssembly+rotZ*dispLg);
                 return (dispTimingAssembly+rotZ*dispLg);
                 
             }
-            else if (nTile<0) {
-                ROOT::Math::XYZVector dispTr(sign*phiSign*(-nomth/2),
+            // else if (nTile<0) {
+            else if (nDepth_in==3) {
+
+                ROOT::Math::XYZVector dispTr(sign*phiTimingSign*(-nomth/2),
                                 0,
                                 -y1slice +abs(nTile)*lT +actY/2 +abs(nC)*actY
                                 );
@@ -161,20 +142,21 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         }
 
         // Endcap
-        else if (nEta_in < nThetaEndcap || nEta_in > nThetaEndcap+nThetaBarrel) {
+        else if (nEta_in < N_THETA_ENDCAP || nEta_in > N_THETA_ENDCAP+N_THETA_BARREL) {
             double thC;
 
-            if (nEta_in < nThetaEndcap) {
-                thC = dThetaEndcap/2+ nEta_in*dThetaEndcap;
+            if (nEta_in < N_THETA_ENDCAP) {
+                thC = D_THETA_ENDCAP/2+ nEta_in*D_THETA_ENDCAP;
             }
-            else if (nEta_in > nThetaEndcap+nThetaBarrel) {
-                thC = dThetaEndcap/2+ (nThetaEndcap -(nEta_in%(nThetaEndcap+nThetaBarrel)) )*dThetaEndcap;
+            else if (nEta_in > N_THETA_ENDCAP+N_THETA_BARREL) {
+                thC = M_PI -THETA_SIZE_ENDCAP +D_THETA_ENDCAP/2 + (nEta_in -(N_THETA_ENDCAP+N_THETA_BARREL)) *D_THETA_ENDCAP;
+                // thC = D_THETA_ENDCAP/2+ (N_THETA_ENDCAP -(nEta_in%(N_THETA_ENDCAP+N_THETA_BARREL)) )*D_THETA_ENDCAP;
             }
-            // double thC        = dThetaEndcap/2+ (nEta_in%(nThetaEndcap+nThetaBarrel))*dThetaEndcap;
+            // double thC        = D_THETA_ENDCAP/2+ (nEta_in%(N_THETA_ENDCAP+N_THETA_BARREL))*D_THETA_ENDCAP;
             double RinEndcap  = EBz*tan(thC);
 
-            int    nPhiEndcapCrystal = floor(2*M_PI*RinEndcap/(nPhiEndcap*nomfw));
-            double dPhiEndcapCrystal = dPhiEndcap/nPhiEndcapCrystal;
+            int    nPhiEndcapCrystal = floor(2*M_PI*RinEndcap/(PHI_SEGMENTS*nomfw));
+            double dPhiEndcapCrystal = D_PHI_GLOBAL/nPhiEndcapCrystal;
 
             double r0e=RinEndcap/sin(thC);
             double r1e=r0e+Fdz;
@@ -182,10 +164,10 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
             int nPhi   = int(nPhi_in/nPhiEndcapCrystal);
             int nGamma = nPhi_in%nPhiEndcapCrystal;
 
-            double phi   = nPhi*dPhiEndcap;
-            double gamma = -dPhiEndcap/2+dPhiEndcapCrystal/2+dPhiEndcapCrystal*nGamma;
+            double phi   = nPhi*D_PHI_GLOBAL;
+            double gamma = -D_PHI_GLOBAL/2+dPhiEndcapCrystal/2+dPhiEndcapCrystal*nGamma;
             
-            int mirror = nEta_in<nThetaEndcap? 0:1;
+            int mirror = nEta_in<N_THETA_ENDCAP? 0:1;
 
             ROOT::Math::RotationZ rotZ(phi);
             ROOT::Math::RotationY rotY(M_PI*mirror);
@@ -214,16 +196,16 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         }
 
         // Barrel
-        else if (nEta_in>=nThetaEndcap && nEta_in<nThetaEndcap+nThetaBarrel) {
+        else if (nEta_in>=N_THETA_ENDCAP && nEta_in<N_THETA_ENDCAP+N_THETA_BARREL) {
 
-            int nTheta = nEta_in -nThetaEndcap;
-            int nPhi   = int(nPhi_in/nPhiBarrelCrystal);
-            int nGamma = nPhi_in%nPhiBarrelCrystal;
+            int nTheta = nEta_in -N_THETA_ENDCAP;
+            int nPhi   = int(nPhi_in/N_PHI_BARREL_CRYSTAL);
+            int nGamma = nPhi_in%N_PHI_BARREL_CRYSTAL;
 
-            double phi   = nPhi*dPhiBarrel;
-            double gamma = -dPhiBarrel/2+dPhiBarrelCrystal/2+dPhiBarrelCrystal*nGamma;
+            double phi   = nPhi*D_PHI_GLOBAL;
+            double gamma = -D_PHI_GLOBAL/2+D_PHI_BARREL_CRYSTAL/2+D_PHI_BARREL_CRYSTAL*nGamma;
 
-            double thC =thetaSizeEndcap+dThetaBarrel/2+(nTheta*dThetaBarrel);
+            double thC =THETA_SIZE_ENDCAP+D_THETA_BARREL/2+(nTheta*D_THETA_BARREL);
 
             double r0e=Rin/sin(thC);
             double r1e=r0e+Fdz;
@@ -256,7 +238,6 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
                           );
                 // fPositionOf.emplace(copyNum, dispSlice+ rotZ*dispR );
                 return (dispSlice+ rotZ*dispR) ;
-
             }
         }
 
@@ -264,17 +245,14 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         // To test positions in detector constructor
 
         // int nEta_in = nTile*nCy +nC;
-
         // int nTilet = int(nEta_in/nCy);
         // int nCt = nEta_in - nTilet*nCy;
-
         // int phiSignt =    iPhi%2==0? 1:-1;
         // int signt    = abs(nTilet)%2==0? 1:-1;
 
         // ROOT::Math::RotationZ rotPhi(phi);
-
         // Position dispLgt(signt*phiSignt*(nomth/2),
-        //                 -w +actX/2 + abs(nCt)*actX,
+        //                 -wT +actX/2 + abs(nCt)*actX,
         //                 -y1slice +abs(nTilet)*lT + lT/2
         //                 );
 
@@ -284,15 +262,12 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
         // dd4hep::PlacedVolume timingLgp = scepcalAssemblyVol.placeVolume( testBoxVol, timingLgId32,  dispTimingAssembly+rotPhi*dispLgt );
 
 
-
-
+        // ROOT::Math::RotationZ rotPhi(phi);
+        // ROOT::Math::RotationY rotY(M_PI*0);
         // Position dispGamma(0, rF*sin(thC)*tan(gamma), 0);
         // Position dispFt(rF*sin(thC)*cos(phi),
         //             rF*sin(thC)*sin(phi),
         //             rF*cos(thC));
-
-        // ROOT::Math::RotationZ rotPhi(phi);
-        // ROOT::Math::RotationY rotY(M_PI*0);
 
         // dd4hep::Box testBox(Fdz/2, Fdz/2, Fdz/2);
         // dd4hep::Volume testBoxVol("BarrelCrystalF", testBox, crystalFMat);
@@ -320,11 +295,6 @@ VolumeID SCEPCALSegmentation::setVolumeID(int System, int Eta, int Phi, int Dept
     VolumeID DepthId = static_cast<VolumeID>(Depth);
     VolumeID vID = 0;
 
-    //std::cout << " In setVolumeID:: " << std::endl;
-    //std::cout << " EtaID:: " << EtaId <<std::endl;
-    //std::cout << " PhiID:: " << PhiId <<std::endl;
-    //std::cout << " DepthID:: " << DepthId <<std::endl;
-
     _decoder->set(vID, fSystemId, SystemId);
     _decoder->set(vID, fEtaId, EtaId);
     _decoder->set(vID, fPhiId, PhiId);
@@ -339,11 +309,6 @@ CellID SCEPCALSegmentation::setCellID(int System, int Eta, int Phi, int Depth) c
     VolumeID PhiId = static_cast<VolumeID>(Phi);
     VolumeID DepthId = static_cast<VolumeID>(Depth);
     VolumeID vID = 0;
-
-    //std::cout << " In setCellID:: " << std::endl;
-    //std::cout << " EtaID:: " << EtaId <<std::endl;
-    //std::cout << " PhiID:: " << PhiId <<std::endl;
-    //std::cout << " DepthID:: " << DepthId <<std::endl;
 
     _decoder->set(vID, fSystemId, SystemId);
     _decoder->set(vID, fEtaId, EtaId);

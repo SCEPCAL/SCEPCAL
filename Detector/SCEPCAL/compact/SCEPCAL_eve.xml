@@ -1,21 +1,30 @@
 <ddeve>
-<!-- #==========================================================================
-     #  AIDA Detector description implementation 
-     #==========================================================================
-     # Copyright (C) Organisation europeenne pour la Recherche nucleaire (CERN)
-     # All rights reserved.
-     #
-     # For the licensing terms see $DD4hepINSTALL/LICENSE.
-     # For the list of contributors see $DD4hepINSTALL/doc/CREDITS.
-     #
-     #==========================================================================
--->
-  <display visLevel="7" loadLevel="1"/>
 
-  <calodata name="Ecal" hits="EcalBarrelHits" towerH="80" emax="1000"
+  <display visLevel="7" loadLevel="6">
+    <vis name="crystalFVis"  alpha="1"   r="0.0"  g="0.0"  b="1.0"  showDaughters="true"  visible="true"/>
+    <vis name="crystalRVis"  alpha="1"   r="0.0"  g="0.5"  b="1.0"  showDaughters="true"  visible="true"/>
+    <vis name="timingVisTr"  alpha="1"   r="0.0"  g="1.0"  b="0.1"  showDaughters="true"  visible="true"/>
+    <vis name="timingVisLg"  alpha="1"   r="1.0"  g="0.3"  b="0.0"  showDaughters="true"  visible="true"/>
+    <vis name="instVis"      alpha="0"   r="0.1"  g="0.1"  b="0.1"  showDaughters="true"  visible="false"/>
+
+    <vis name="scepcalAssemblyVis"  alpha="0" r="0.3"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
+    <vis name="scepcalAssemblyGlobalVis"  alpha="0" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="false"/>
+
+  </display>
+  <calodata name="barrelData" hits="SCEPCALreadout" towerH="80" emax="1000"
 	    n_eta="200" eta_min="-5" eta_max="5" 
 	    n_phi="200" phi_min="-pi" phi_max="pi" 
-	    alpha="0.5" rmin="EcalBarrel_rmin" dz="EcalEndcap_zmin" color="kRed"/>
+	    alpha="0.5" rmin="1.8*m" dz="2.25*m" color="kRed"/>
+<!-- 
+
+
+
+
+TFile *f = TFile::Open("wzp6_ee_ZZ_test_ecm240_test10_5cm.root","UPDATE");
+TTree* tree = (TTree*)f->Get("events");
+tree->SetName("EVENT");
+f->Write();
+
 
   <calodata name="EcalEndcap" use="Ecal" hits="EcalEndcapHits"/>
 
@@ -44,25 +53,20 @@
 	    n_eta="200" eta_min="-5" eta_max="5" 
 	    n_phi="200" phi_min="-pi" phi_max="pi" 
 	    alpha="0.5" rmin="ForwardTracker_rmax" dz="ForwardTracker_z3" color="kCyan"/>
+-->
 
-  <calodata name="SiTrackerEndcap" use="SiTracker" hits="SiTrackerEndcapHits"/>
+  <!-- <calodata name="SiTrackerEndcap" use="SiTracker" hits="SiTrackerEndcapHits"/> -->
 
-  <calodata name="SiTrackerForward" use="SiTracker" hits="SiTrackerForwardHits"/>
+  <!-- <calodata name="SiTrackerForward" use="SiTracker" hits="SiTrackerForwardHits"/> -->
 
-
-
-
-  <collection name="EcalBarrelHits" hits="PointSet" color="kGreen+3" size="0.3" type="21" towerH="3*MeV" emax="10*GeV"/>
-  <collection name="HcalBarrelHits" hits="PointSet" color="kBlue" size="0.3" type="21" towerH="3*MeV" emax="2*GeV"/>
-  <collection name="SiTrackerForwardHits" hits="PointSet" color="kMagenta" size="0.3" type="20"/>
-  <collection name="SiTrackerBarrelHits" hits="PointSet" color="kMagenta" size="0.3" type="20"/>
-  <collection name="SiTrackerEndcapHits" hits="PointSet" color="kMagenta" size="0.3" type="20"/>
+  <collection name="SCEPCALreadout" hits="PointSet" color="kGreen+3" size="0.3" type="21" towerH="3*MeV" emax="10*GeV"/>
+  <!-- <collection name="HcalBarrelHits" hits="PointSet" color="kBlue" size="0.3" type="21" towerH="3*MeV" emax="2*GeV"/> -->
+  <!-- <collection name="SiTrackerForwardHits" hits="PointSet" color="kMagenta" size="0.3" type="20"/> -->
+  <!-- <collection name="SiTrackerBarrelHits" hits="PointSet" color="kMagenta" size="0.3" type="20"/> -->
+  <!-- <collection name="SiTrackerEndcapHits" hits="PointSet" color="kMagenta" size="0.3" type="20"/> -->
   <collection name="MC_Particles" hits="Particles" size="0.6" width="2" type="kCircle"/>
 
-
-
-
-  <view name="3D Trackers R-Phi (Global)" type="RhoPhiProjection">
+  <!-- <view name="3D Trackers R-Phi (Global)" type="RhoPhiProjection">
     <detelement name="SiVertexBarrel"    load_geo="-1" alpha="0.5"/>
     <detelement name="SiTrackerBarrel"   load_geo="-1" alpha="0.5"/>
   </view>
@@ -70,91 +74,51 @@
   <view name="3D Trackers R-Phi (Local)" type="RhoPhiProjection">
     <detelement name="SiVertexBarrel"    load_geo="3" alpha="0.5"/>
     <detelement name="SiTrackerBarrel"   load_geo="3" alpha="0.5"/>
-  </view>
+  </view> -->
 
-  <view name="3D Trackers" type="View3D">
-    <detelement name="SiVertexBarrel"    load_geo="-1" alpha="0.5"/>
-    <detelement name="SiVertexEndcap"    load_geo="-1" alpha="0.5"/>
-    <detelement name="SiTrackerBarrel"   load_geo="-1" alpha="0.5"/>
-    <detelement name="SiTrackerEndcap"   load_geo="-1" alpha="0.5"/>
-    <detelement name="SiTrackerForward"  load_geo="-1" alpha="0.5"/>
-  </view>
 
-  <view name="3D Vertex" type="View3D">
-    <detelement name="SiVertexBarrel" load_geo="1" alpha="0.5"/>
-    <detelement name="SiVertexEndcap" load_geo="1" alpha="0.5"/>
-  </view>
-
-  <view name="3D Ecal+Hcal" type="Calo3DProjection">
-    <detelement name="EcalBarrel" load_geo="-1" show_evt="1" alpha="0.5"/>
-    <detelement name="HcalBarrel" load_geo="-1" show_evt="0" alpha="0.5"/>
-    <calodata name="Ecal"/>
-    <calodata name="Hcal"/>
+  <view name="3D Ecal" type="Calo3DProjection">
+    <detelement name="Scepcal" load_geo="-1" show_evt="1" alpha="0.5"/>
+    <calodata name="barrelData"/>
   </view>
 
   <view name="3D Calorimeters" type="View3D">
-    <detelement name="EcalBarrel" load_geo="2" alpha="0.5"/>
-    <detelement name="EcalEndcap" load_geo="2" alpha="0.5"/>
-    <detelement name="HcalPlug"   load_geo="2" alpha="0.5"/>
-    <detelement name="HcalBarrel" load_geo="2" alpha="0.5"/>
-    <detelement name="HcalEndcap" load_geo="2" alpha="0.5"/>
+    <detelement name="Scepcal" load_geo="2" alpha="0.5"/>
+    <!-- <detelement name="EcalEndcap" load_geo="2" alpha="0.5"/> -->
     <collection name="MC_Particles" use="MC_Particles"/>
   </view>
 
   <view name="Calo 3D" type="Calo3DProjection">
-    <calodata name="Ecal"/>
-    <calodata name="Hcal"/>
-    <calodata name="EcalEndcap"/>
-    <calodata name="HcalEndcap"/>
+    <calodata name="barrelData"/>
+    <!-- <calodata name="EcalEndcap"/> -->
     <collection name="MC_Particles" use="MC_Particles"/>
   </view>
 
   <view name="Calo Lego" type="CaloLego">
-    <calodata name="Ecal"/>
-    <calodata name="Hcal"/>
-    <calodata name="EcalEndcap"/>
-    <calodata name="HcalEndcap"/>
-  </view>
-
-  <view name="Muon 3D" type="Calo3DProjection">
-    <calodata name="Muon"/>
-    <calodata name="MuonEndcap"/>
-  </view>
-
-  <view name="Silicon Deposits" type="Calo3DProjection">
-    <calodata name="SiVertex"/>
-    <calodata name="SiVertexEndcap"/>
-    <calodata name="SiTracker"/>
-    <calodata name="SiTrackerEndcap"/>
-    <calodata name="SiTrackerForward"/>
+    <calodata name="barrelData"/>
+    <!-- <calodata name="EcalEndcap"/> -->
   </view>
 
   <view name="Calo 2D" type="Calo2DProjection">
-    <calodata name="Ecal"/>
-    <calodata name="Hcal"/>
-    <calodata name="Muon"/>
-    <detelement name="EcalBarrel" load_geo="-1" alpha="0.5"/>
-    <detelement name="HcalBarrel" load_geo="-1" alpha="0.5"/>
+    <calodata name="barrelData"/>
+    <detelement name="Scepcal" load_geo="-1" alpha="0.5"/>
     <collection name="MC_Particles" use="MC_Particles"/>
   </view>
-
+<!-- 
   <view name="Multi (Global)" type="MultiView">
     <detelement name="global"/>
-  </view>
+  </view> -->
 
   <view name="Multi (Calo)" type="MultiView">
-    <detelement name="EcalBarrel" load_geo="-1" alpha="0.5"/>
-    <detelement name="EcalEndcap" load_geo="-1" alpha="0.5"/>
-    <detelement name="HcalPlug"   load_geo="-1" alpha="0.5"/>
-    <detelement name="HcalBarrel" load_geo="-1" alpha="0.5"/>
-    <detelement name="HcalEndcap" load_geo="-1" alpha="0.5"/>
+    <detelement name="Scepcal" load_geo="-1" alpha="0.5"/>
+    <!-- <detelement name="EcalEndcap" load_geo="-1" alpha="0.5"/> -->
     <collection name="MC_Particles" use="MC_Particles"/>
-    <panel name="Silicon Deposits" use="Calo3DProjection"/>
+    <panel name="Calo 3D"          use="Calo3DProjection"/>
     <panel name="Calo 2D"          use="Calo2DProjection"/>
   </view>
 
 
 
-  <include ref="${DD4hepINSTALL}/DDDetectors/compact/SiD.xml"/>
+  <include ref="SCEPCAL.xml"/>
 
 </ddeve>

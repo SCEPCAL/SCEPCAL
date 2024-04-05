@@ -27,6 +27,13 @@ Generating events relies on [k4Gen](https://github.com/HEP-FCC/k4Gen), generates
 ### Running GEANT4 simulation
 An example configuration is located at `SCEPCALsim/SCEPCALsimG4Components/test/runSCEPCALsim.py`. After modifying the configuration based on your needs, run
 
+For running in ddsim (latest):
+
+```sh
+ddsim scepcal_steering.py
+```
+For running in Gaudi (old):
+
 ```sh
 k4run runSCEPCALsim.py
 ```
