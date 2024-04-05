@@ -65,10 +65,11 @@ namespace dd4hep {
     Geant4SensitiveAction<ScepcalSDContainer>::process(const G4Step* step,G4TouchableHistory* /*hist*/ ) {
 
         G4double edep = step->GetTotalEnergyDeposit(); //*CLHEP::MeV/CLHEP::GeV;
-        // if (edep == 0.) return false;
+        
+        if (edep == 0.) return false;
         typedef Geant4Calorimeter::Hit Hit;
         Geant4StepHandler    h(step);
-        Geant4TouchableHandler handler(step);
+        // Geant4TouchableHandler handler(step);
         HitContribution      contrib = Hit::extractContribution(step);
         Geant4HitCollection* coll    = collection(m_collectionID);
 
@@ -80,18 +81,26 @@ namespace dd4hep {
         auto copyNum64 = segmentation->convertFirst32to64(aPreStepTouchable->GetCopyNumber(0));
         int cellID = (int)copyNum64;
 
-        DDSegmentation::Vector3D pos = segmentation->myPosition(copyNum64);
+        // DDSegmentation::Vector3D pos = segmentation->myPosition(copyNum64);
 
-        Position global(pos.x(),pos.y(),pos.z());
+        // Position global(pos.x(),pos.y(),pos.z());
+        // Hit* hit = nullptr;
+        // hit = new Hit(global);
+        // hit->cellID = cellID;
+        // hit->truth.emplace_back(contrib);
+        // hit->energyDeposit = edep; //contrib.deposit;
+        // coll->add(hit);
 
-        Hit* hit = nullptr;
-        hit = new Hit(global);
-
-        hit->cellID = cellID;
+        Hit* hit = coll->findByKey<Hit>(cellID);
+        if ( !hit ) {
+          DDSegmentation::Vector3D pos = segmentation->myPosition(copyNum64);
+          Position global(pos.x(),pos.y(),pos.z());
+          hit = new Hit(global);
+          hit->cellID = cellID;
+          coll->add(cellID, hit);
+        }
         hit->truth.emplace_back(contrib);
-        hit->energyDeposit = edep; //contrib.deposit;
-
-        coll->add(hit);
+        hit->energyDeposit += edep;
 
         mark(h.track);
         return true;

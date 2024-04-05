@@ -6,37 +6,78 @@
     <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
   </includes>
 
-  <info name="SCEPCAL"
-        title="Segmented Crystal ECAL"
-        author="Wonyong Chung"
-        url="no"
-        status="development"
-        version="0.0.1">
-    <comment>
-      The compact format for the segmented crystal ECAL
-    </comment>
-  </info>
-
-  <define>
-    <constant name="world_size" value="20.*m"/>
-    <constant name="world_x" value="world_size/2."/>
-    <constant name="world_y" value="world_size/2."/>
-    <constant name="world_z" value="world_size/2."/>
-  </define>
-
-  <readouts>
-    <readout name="SCEPCALreadout">
-      <segmentation type="SCEPCALSegmentation"/>
-      <id>system:5,eta:-11,phi:12,depth:3</id>
-    </readout>
-  </readouts>
-
   <properties>
+
+    <matrix name="RINDEX__Air" coldim="2" values="  
+      1.1*eV 1.
+      1.500*eV 1.
+      1.750*eV 1.
+      2.0*eV 1.
+      2.034*eV 1.
+      2.068*eV 1.
+      2.103*eV 1.
+      2.139*eV 1.
+      2.177*eV 1.
+      2.216*eV 1.
+      2.256*eV 1.
+      2.298*eV 1.
+      2.341*eV 1.
+      2.386*eV 1.
+      2.433*eV 1.
+      2.481*eV 1.
+      2.532*eV 1.
+      2.585*eV 1.
+      2.640*eV 1.
+      2.697*eV 1.
+      2.757*eV 1.
+      2.820*eV 1.
+      2.885*eV 1.
+      2.954*eV 1.
+      3.026*eV 1.
+      3.102*eV 1.
+      3.181*eV 1.
+      3.265*eV 1.
+      3.353*eV 1.
+      3.446*eV 1.
+      3.545*eV 1.
+      3.649*eV 1.
+      3.760*eV 1.
+      3.877*eV 1.
+      4.002*eV 1.
+      4.136*eV 1.
+    "/>
+
     <matrix name="RI_PbWO" coldim="2" values="
-      1.5*eV 2.2105
+      1.1*eV  2.19414
+      1.2*eV  2.19762
+      1.3*eV  2.20149
+      1.4*eV  2.20577
+      1.5*eV  2.2105
       1.6*eV 2.21571
-      1.7*eV 2.22144
+      1.7*eV  2.22144
       1.8*eV 2.22773
+      1.9*eV 2.23463
+      2.0*eV  2.24221
+      2.1*eV  2.25053
+      2.2*eV 2.25968
+      2.256*eV 2.26974
+      2.3*eV 2.26974
+      2.4*eV 2.28084
+      2.5*eV 2.2931
+      2.6*eV 2.30668
+      2.7*eV 2.32177
+      2.8*eV  2.3386
+      2.9*eV 2.35745
+      3.0*eV 2.37866
+      3.1*eV 2.40268
+      3.2*eV  2.43006
+      3.3*eV  2.4615
+      3.4*eV 2.49794
+      3.5*eV  2.54063
+      3.6*eV  2.59128
+      3.7*eV  2.6523
+      3.8*eV  2.72722
+      3.9*eV  2.82141
     "/>
 
     <matrix name="RI_LYSO" coldim="2" values="
@@ -909,12 +950,13 @@
       <property name="RINDEX" ref="RI_PbWO"/>
       <property name="ABSLENGTH" ref="AbsLen_PbWO"/>
       <property name="SCINTILLATIONCOMPONENT1" ref="scintFast_PbWO"/>
-      <property name="ELECTRONSCINTILLATIONYIELD" ref="electronScintYield_PbWO"/>
-      <constant name="SCINTILLATIONYIELD" value="100/MeV"/> <!-- for 10% of detected cherenkov in PMTs, 1/MeV for debugging -->
-      <constant name="SCINTILLATIONTIMECONSTANT1" value="10*ns"/>
+      <!-- <property name="ELECTRONSCINTILLATIONYIELD" ref="electronScintYield_PbWO"/> -->
+      <constant name="SCINTILLATIONYIELD" value="450/MeV"/> <!-- for 10% of detected cherenkov in PMTs, 1/MeV for debugging -->
+      <constant name="SCINTILLATIONTIMECONSTANT1" value="5.*ns"/>
+      <constant name="SCINTILLATIONTIMECONSTANT2" value="15.*ns"/>
+      <constant name="SCINTILLATIONRISETIME1" value="0.01*ns"/> <!-- careful on rise time -->
       <constant name="RESOLUTIONSCALE" value="1."/>  <!-- 3.2 default value-->
-      <constant name="SCINTILLATIONYIELD1" value="1."/>
-      <constant name="SCINTILLATIONRISETIME1" value="0.2*ns"/> <!-- careful on rise time -->
+      <constant name="SCINTILLATIONYIELD1" value="0.3"/>
 
     </material>
 
@@ -935,6 +977,38 @@
 
   </materials>
 
+
+  <info name="SCEPCAL"
+        title="Segmented Crystal ECAL"
+        author="Wonyong Chung"
+        url="no"
+        status="development"
+        version="0.0.1">
+    <comment>
+      The compact format for the segmented crystal ECAL
+    </comment>
+  </info>
+
+  <define>
+    <constant name="world_size" value="20.*m"/>
+    <constant name="world_x" value="world_size/2."/>
+    <constant name="world_y" value="world_size/2."/>
+    <constant name="world_z" value="world_size/2."/>
+  </define>
+
+  <readouts>
+    <readout name="SCEPCAL_BE_readout">
+      <segmentation type="SCEPCALSegmentation"/>
+      <id>system:4,eta:12,phi:12,depth:2</id>
+    </readout>
+
+    <readout name="SCEPCAL_TL_readout">
+      <segmentation type="SCEPCALSegmentation"/>
+      <id>system:4,eta:12,phi:12,depth:2</id>
+    </readout>
+
+  </readouts>
+
   <display>
     <vis name="crystalFVis"  alpha="1"   r="0.0"  g="0.0"  b="1.0"  showDaughters="true"  visible="true"/>
     <vis name="crystalRVis"  alpha="1"   r="0.0"  g="0.5"  b="1.0"  showDaughters="true"  visible="true"/>
@@ -947,13 +1021,24 @@
 
   </display>
 
-  <field name="MyMagnet" type="ConstantField" field="magnetic">
-    <strength x="0" y="0" z="0"/>
-  </field>
+  <!-- <fields>
+    <field name="GlobalSolenoid"
+    type="solenoid"
+    inner_field="4.0*tesla"
+    outer_field="-1.5*tesla"
+    zmax="2.5*m"
+    outer_radius="2.2*m">
+    </field>
+  </fields> -->
 
   <detectors>
 
-    <detector id="2" name="Scepcal" type="SCEPCAL" readout="SCEPCALreadout" vis="scepcalAssemblyGlobalVis" sensitive="true">
+    <detector id="2"
+              name="Scepcal_BE"
+              type="SCEPCAL_BE" 
+              readout="SCEPCAL_BE_readout"
+              vis="scepcalAssemblyGlobalVis"
+              sensitive="true">
 
       <sensitive type="ScepcalSD"/>
       
@@ -965,7 +1050,6 @@
         phistart="0" phiend="32" 
         thetastart="15"
       />
-
 
       <dim    barrelHalfZ="2.25*m"
               barrelInnerR="2*m" 
@@ -983,10 +1067,53 @@
       <scepcalAssembly vis="scepcalAssemblyVis"/>
       <scepcalAssemblyGlobalVis vis="scepcalAssemblyGlobalVis"/>
 
+      <printDebug level="1"/>
+
+    </detector>
+
+
+
+    <detector id="3"
+              name="Scepcal_TL" 
+              type="SCEPCAL_TL" 
+              readout="SCEPCAL_TL_readout"
+              vis="scepcalAssemblyGlobalVis"
+              sensitive="true">
+
+      <sensitive type="ScepcalSD"/>
+      
+      <barrel construct="true" 
+        phistart="0" phiend="32"
+      />
+
+      <endcap construct="true" reflect="true" 
+        phistart="0" phiend="32" 
+        thetastart="15"
+      />
+
+      <dim    barrelHalfZ="2.25*m"
+              barrelInnerR="2*m" 
+              crystalFaceWidthNominal="10*mm" 
+              crystalTimingThicknessNominal="10*mm"
+              phiSegments="32"
+      />
+
+      <crystalF       length="50*mm"      material="PbWO"          vis="crystalFVis"/>
+      <crystalR       length="150*mm"     material="PbWO"          vis="crystalRVis"/>
+      <timingLayerTr                      material="LYSO"          vis="timingVisTr"/>
+      <timingLayerLg                      material="LYSO"          vis="timingVisLg"/>
+      <inst                               material="AluminumOxide" vis="instVis"/>
+
+      <scepcalAssembly vis="scepcalAssemblyVis"/>
+      <scepcalAssemblyGlobalVis vis="scepcalAssemblyGlobalVis"/>
 
       <printDebug level="1"/>
 
     </detector>
+
+
+
+
 
   </detectors>
 
