@@ -4,6 +4,9 @@ file(GLOB headers
   ${PROJECT_SOURCE_DIR}/include/*.h
 )
 
+dd4hep_set_compiler_flags()
+dd4hep_use_python_executable()
+
 dd4hep_add_plugin(ddSCEPCAL SOURCES src/*.cpp USES
   DD4hep::DDCore
   DD4hep::DDCond
