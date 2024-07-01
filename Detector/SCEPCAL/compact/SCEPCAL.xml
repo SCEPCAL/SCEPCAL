@@ -4,8 +4,7 @@
   <includes>
     <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
     <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
-    <gdmlFile ref="SCEPCAL_materials.xml"/>
-    <gdmlFile ref="SCEPCAL_properties.xml"/>
+    <gdmlFile ref="SCEPCAL_matprops.xml"/>
 
   </includes>
 
