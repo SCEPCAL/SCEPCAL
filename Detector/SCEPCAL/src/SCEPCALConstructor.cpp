@@ -157,13 +157,13 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   double y2slice          = z2slice*tan(M_PI/2-THETA_SIZE_ENDCAP);
 
   // Timing layer envelope
-  // double  rT      = z1slice -2*nomth;
-  // double  wT      = rT *tan(D_PHI_GLOBAL/2);
-  // int     nTiles  = ceil(y1slice/wT);
-  // double  lT      = 2*y1slice/nTiles;
-  // int     nCy     = floor(lT/nomth);
-  // double  actY    = lT/nCy;
-  // double  actX    = 2*wT/nCy; 
+  double  rT      = z1slice -2*nomth;
+  double  wT      = rT *tan(D_PHI_GLOBAL/2);
+  int     nTiles  = ceil(y1slice/wT);
+  double  lT      = 2*y1slice/nTiles;
+  int     nCy     = floor(lT/nomth);
+  double  actY    = lT/nCy;
+  double  actX    = 2*wT/nCy; 
 
   //-----------------------------------------------------------------------------------
   // Reco struct
