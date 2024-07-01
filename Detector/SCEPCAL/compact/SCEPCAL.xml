@@ -1004,10 +1004,10 @@
       <id>system:4,eta:12,phi:12,depth:2</id>
     </readout>
 
-    <readout name="SCEPCAL_TL_readout">
+    <!-- <readout name="SCEPCAL_TL_readout">
       <segmentation type="SCEPCALSegmentation"/>
       <id>system:4,eta:12,phi:12,depth:2</id>
-    </readout>
+    </readout> -->
 
   </readouts>
 
