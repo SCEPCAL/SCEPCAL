@@ -4,8 +4,6 @@
   <includes>
     <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
     <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
-    <gdmlFile ref="SCEPCAL_matprops.xml"/>
-
   </includes>
 
   <properties>
@@ -1004,10 +1002,10 @@
       <id>system:4,eta:12,phi:12,depth:2</id>
     </readout>
 
-    <!-- <readout name="SCEPCAL_TL_readout">
+    <readout name="SCEPCAL_TL_readout">
       <segmentation type="SCEPCALSegmentation"/>
       <id>system:4,eta:12,phi:12,depth:2</id>
-    </readout> -->
+    </readout>
 
   </readouts>
 
@@ -1075,7 +1073,7 @@
 
 
 
-    <!-- <detector id="3"
+    <detector id="3"
               name="Scepcal_TL" 
               type="SCEPCAL_TL" 
               readout="SCEPCAL_TL_readout"
@@ -1111,7 +1109,7 @@
 
       <printDebug level="1"/>
 
-    </detector> -->
+    </detector>
 
 
 
