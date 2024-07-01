@@ -235,7 +235,7 @@ def setupCerenkovScint(kernel):
 
      return None
 
-SIM.physics.setupUserPhysics(setupCerenkovScint)
+# SIM.physics.setupUserPhysics(setupCerenkovScint)
 
 
 SIM.random.enableEventSeed = False

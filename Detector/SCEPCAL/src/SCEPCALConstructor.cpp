@@ -89,6 +89,7 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
 
 
   std::cout << std::endl;
+  std::cout << "==BARREL AND ENDCAP==" << std::endl;
   std::cout << "GEOMETRY INPUTS:" << std::endl;
   std::cout << "CONSTRUCT_BARREL:   " << CONSTRUCT_BARREL   << std::endl;
   std::cout << "BARREL_PHI_START:   " << BARREL_PHI_START   << std::endl;
@@ -156,13 +157,13 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   double y2slice          = z2slice*tan(M_PI/2-THETA_SIZE_ENDCAP);
 
   // Timing layer envelope
-  double  rT      = z1slice -2*nomth;
-  double  wT      = rT *tan(D_PHI_GLOBAL/2);
-  int     nTiles  = ceil(y1slice/wT);
-  double  lT      = 2*y1slice/nTiles;
-  int     nCy     = floor(lT/nomth);
-  double  actY    = lT/nCy;
-  double  actX    = 2*wT/nCy; 
+  // double  rT      = z1slice -2*nomth;
+  // double  wT      = rT *tan(D_PHI_GLOBAL/2);
+  // int     nTiles  = ceil(y1slice/wT);
+  // double  lT      = 2*y1slice/nTiles;
+  // int     nCy     = floor(lT/nomth);
+  // double  actY    = lT/nCy;
+  // double  actX    = 2*wT/nCy; 
 
   //-----------------------------------------------------------------------------------
   // Reco struct
@@ -205,103 +206,103 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
     // Timing Layer
     //-----------------------------------------------------------------------------------
 
-    dd4hep::Box timingAssemblyShape(nomth,wT,y1slice);
-    dd4hep::Volume timingAssemblyVolume("TimingAssembly", timingAssemblyShape, theDetector.material("Vacuum"));
-    timingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
+    // dd4hep::Box timingAssemblyShape(nomth,wT,y1slice);
+    // dd4hep::Volume timingAssemblyVolume("TimingAssembly", timingAssemblyShape, theDetector.material("Vacuum"));
+    // timingAssemblyVolume.setVisAttributes(theDetector, scepcalAssemblyXML.visStr());
 
-    RotationZYX rotTimingAssembly(0, 0, 0);
-    RotationZ rotZPhi(phiEnvBarrel);
-    rotTimingAssembly = rotZPhi*rotTimingAssembly;
+    // RotationZYX rotTimingAssembly(0, 0, 0);
+    // RotationZ rotZPhi(phiEnvBarrel);
+    // rotTimingAssembly = rotZPhi*rotTimingAssembly;
 
-    double rTimingAssembly = rT+nomth;
-    Position dispTimingAssembly(rTimingAssembly*cos(phiEnvBarrel),
-                                rTimingAssembly*sin(phiEnvBarrel),
-                                0);
+    // double rTimingAssembly = rT+nomth;
+    // Position dispTimingAssembly(rTimingAssembly*cos(phiEnvBarrel),
+                                // rTimingAssembly*sin(phiEnvBarrel),
+                                // 0);
 
-    scepcalAssemblyVol.placeVolume( timingAssemblyVolume, Transform3D(rotTimingAssembly, dispTimingAssembly) );
+    // scepcalAssemblyVol.placeVolume( timingAssemblyVolume, Transform3D(rotTimingAssembly, dispTimingAssembly) );
 
-    dd4hep::Box timingCrystalLg(nomth/2,actX/2,lT/2);
-    dd4hep::Box timingCrystalTr(nomth/2,wT,actY/2);
-    dd4hep::Volume timingCrystalLgVol("TimingCrystalLg", timingCrystalLg, timingLgMat);
-    dd4hep::Volume timingCrystalTrVol("TimingCrystalTr", timingCrystalTr, timingTrMat);
-    timingCrystalLgVol.setVisAttributes(theDetector, timingLgXML.visStr());
-    timingCrystalTrVol.setVisAttributes(theDetector, timingTrXML.visStr());
+    // dd4hep::Box timingCrystalLg(nomth/2,actX/2,lT/2);
+    // dd4hep::Box timingCrystalTr(nomth/2,wT,actY/2);
+    // dd4hep::Volume timingCrystalLgVol("TimingCrystalLg", timingCrystalLg, timingLgMat);
+    // dd4hep::Volume timingCrystalTrVol("TimingCrystalTr", timingCrystalTr, timingTrMat);
+    // timingCrystalLgVol.setVisAttributes(theDetector, timingLgXML.visStr());
+    // timingCrystalTrVol.setVisAttributes(theDetector, timingTrXML.visStr());
 
-    for (int nTile=0; nTile<nTiles; nTile++) {
+    // for (int nTile=0; nTile<nTiles; nTile++) {
 
-      for (int nC=0; nC<nCy; nC++) {
+    //   for (int nC=0; nC<nCy; nC++) {
 
-        int phiEnvBarrelSign = iPhi%2==0? 1:-1;
-        int sign             = nTile%2==0? 1:-1;
+    //     int phiEnvBarrelSign = iPhi%2==0? 1:-1;
+    //     int sign             = nTile%2==0? 1:-1;
 
-        RotationZYX rotTiming(0, 0, 0);
+    //     RotationZYX rotTiming(0, 0, 0);
 
-        Position dispLg(sign*phiEnvBarrelSign*(nomth/2),
-                        -wT +actX/2 + nC*actX,
-                        -y1slice +nTile*lT + lT/2
-                        );
+    //     Position dispLg(sign*phiEnvBarrelSign*(nomth/2),
+    //                     -wT +actX/2 + nC*actX,
+    //                     -y1slice +nTile*lT + lT/2
+    //                     );
 
-        Position dispTr(sign*phiEnvBarrelSign*(-nomth/2),
-                        0,
-                        -y1slice +nTile*lT +actY/2 +nC*actY
-                        );
+    //     Position dispTr(sign*phiEnvBarrelSign*(-nomth/2),
+    //                     0,
+    //                     -y1slice +nTile*lT +actY/2 +nC*actY
+    //                     );
 
-        auto timingLgId64=segmentation->setVolumeID(1,  nTile*nCy +nC , iPhi, 0);
-        // auto timingTrId64=segmentation->setVolumeID(1, -nTile*nCy -nC , iPhi, 0);
-        auto timingTrId64=segmentation->setVolumeID(1,  nTile*nCy +nC , iPhi, 3);
+    //     auto timingLgId64=segmentation->setVolumeID(1,  nTile*nCy +nC , iPhi, 0);
+    //     // auto timingTrId64=segmentation->setVolumeID(1, -nTile*nCy -nC , iPhi, 0);
+    //     auto timingTrId64=segmentation->setVolumeID(1,  nTile*nCy +nC , iPhi, 3);
 
-        int timingLgId32=segmentation->getFirst32bits(timingLgId64);
-        int timingTrId32=segmentation->getFirst32bits(timingTrId64);
+    //     int timingLgId32=segmentation->getFirst32bits(timingLgId64);
+    //     int timingTrId32=segmentation->getFirst32bits(timingTrId64);
 
-        // Place volumes and ID them
-        dd4hep::PlacedVolume timingLgp = timingAssemblyVolume.placeVolume( timingCrystalLgVol, timingLgId32, Transform3D(rotTiming,dispLg) );
-        dd4hep::PlacedVolume timingTrp = timingAssemblyVolume.placeVolume( timingCrystalTrVol, timingTrId32, Transform3D(rotTiming,dispTr) );
+    //     // Place volumes and ID them
+    //     dd4hep::PlacedVolume timingLgp = timingAssemblyVolume.placeVolume( timingCrystalLgVol, timingLgId32, Transform3D(rotTiming,dispLg) );
+    //     dd4hep::PlacedVolume timingTrp = timingAssemblyVolume.placeVolume( timingCrystalTrVol, timingTrId32, Transform3D(rotTiming,dispTr) );
 
-        if (!timingLgp.volume().isSensitive()) timingLgp.volume().setSensitiveDetector(sens);
-        if (!timingTrp.volume().isSensitive()) timingTrp.volume().setSensitiveDetector(sens);
+    //     if (!timingLgp.volume().isSensitive()) timingLgp.volume().setSensitiveDetector(sens);
+    //     if (!timingTrp.volume().isSensitive()) timingTrp.volume().setSensitiveDetector(sens);
 
-        Position dispLgglobal = dispTimingAssembly+rotZPhi*dispLg;
-        Position dispTrglobal = dispTimingAssembly+rotZPhi*dispTr;
+    //     Position dispLgglobal = dispTimingAssembly+rotZPhi*dispLg;
+    //     Position dispTrglobal = dispTimingAssembly+rotZPhi*dispTr;
 
-        CaloCellData timingCellLg;
-        timingCellLg.cellSize0 = lT;
-        timingCellLg.cellSize1 = actX;
-        timingCellLg.inner_thickness     = nomth;
-        timingCellLg.outer_thickness     = nomth;
-        timingCellLg.sensitive_thickness = nomth;
-        timingCellLg.inner_nRadiationLengths   = nomth/timingLgMat.radLength();
-        timingCellLg.inner_nInteractionLengths = nomth/timingLgMat.intLength();
-        timingCellLg.outer_nRadiationLengths   = nomth/timingLgMat.radLength();
-        timingCellLg.outer_nInteractionLengths = nomth/timingLgMat.intLength();
-        timingCellLg.distance = sqrt(dispLgglobal.mag2()); 
-        barrelData->layers.push_back( timingCellLg ) ;
+    //     CaloCellData timingCellLg;
+    //     timingCellLg.cellSize0 = lT;
+    //     timingCellLg.cellSize1 = actX;
+    //     timingCellLg.inner_thickness     = nomth;
+    //     timingCellLg.outer_thickness     = nomth;
+    //     timingCellLg.sensitive_thickness = nomth;
+    //     timingCellLg.inner_nRadiationLengths   = nomth/timingLgMat.radLength();
+    //     timingCellLg.inner_nInteractionLengths = nomth/timingLgMat.intLength();
+    //     timingCellLg.outer_nRadiationLengths   = nomth/timingLgMat.radLength();
+    //     timingCellLg.outer_nInteractionLengths = nomth/timingLgMat.intLength();
+    //     timingCellLg.distance = sqrt(dispLgglobal.mag2()); 
+    //     barrelData->layers.push_back( timingCellLg ) ;
 
-        CaloCellData timingCellTr;
-        timingCellTr.cellSize0 = actY;
-        timingCellTr.cellSize1 = 2*wT;
-        timingCellTr.inner_thickness     = nomth;
-        timingCellTr.outer_thickness     = nomth;
-        timingCellTr.sensitive_thickness = nomth;
-        timingCellTr.inner_nRadiationLengths   = nomth/timingTrMat.radLength();
-        timingCellTr.inner_nInteractionLengths = nomth/timingTrMat.intLength();
-        timingCellTr.outer_nRadiationLengths   = nomth/timingTrMat.radLength();
-        timingCellTr.outer_nInteractionLengths = nomth/timingTrMat.intLength();
-        timingCellTr.distance = sqrt(dispTrglobal.mag2()); 
-        barrelData->layers.push_back( timingCellTr ) ;
+    //     CaloCellData timingCellTr;
+    //     timingCellTr.cellSize0 = actY;
+    //     timingCellTr.cellSize1 = 2*wT;
+    //     timingCellTr.inner_thickness     = nomth;
+    //     timingCellTr.outer_thickness     = nomth;
+    //     timingCellTr.sensitive_thickness = nomth;
+    //     timingCellTr.inner_nRadiationLengths   = nomth/timingTrMat.radLength();
+    //     timingCellTr.inner_nInteractionLengths = nomth/timingTrMat.intLength();
+    //     timingCellTr.outer_nRadiationLengths   = nomth/timingTrMat.radLength();
+    //     timingCellTr.outer_nInteractionLengths = nomth/timingTrMat.intLength();
+    //     timingCellTr.distance = sqrt(dispTrglobal.mag2()); 
+    //     barrelData->layers.push_back( timingCellTr ) ;
 
-        timingLgp.addPhysVolID("system", 1);
-        timingLgp.addPhysVolID("eta", nTile*nCy +nC);
-        timingLgp.addPhysVolID("phi", iPhi);
-        timingLgp.addPhysVolID("depth", 0);
+    //     timingLgp.addPhysVolID("system", 1);
+    //     timingLgp.addPhysVolID("eta", nTile*nCy +nC);
+    //     timingLgp.addPhysVolID("phi", iPhi);
+    //     timingLgp.addPhysVolID("depth", 0);
 
-        timingTrp.addPhysVolID("system", 1);
-        // timingTrp.addPhysVolID("eta", -1 -nTile*nCy -nC);
-        timingTrp.addPhysVolID("eta", nTile*nCy +nC);
+    //     timingTrp.addPhysVolID("system", 1);
+    //     // timingTrp.addPhysVolID("eta", -1 -nTile*nCy -nC);
+    //     timingTrp.addPhysVolID("eta", nTile*nCy +nC);
 
-        timingTrp.addPhysVolID("phi", iPhi);
-        timingTrp.addPhysVolID("depth", 3);
-      }
-    }
+    //     timingTrp.addPhysVolID("phi", iPhi);
+    //     timingTrp.addPhysVolID("depth", 3);
+    //   }
+    // }
 
     //-----------------------------------------------------------------------------------
     // Barrel Crystals
@@ -759,7 +760,7 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   int scepcalAssemblyVolId32=segmentation->getFirst32bits(scepcalAssemblyVolId);
 
   dd4hep::PlacedVolume ScepcalPlacedVol = experimentalHall.placeVolume(scepcalAssemblyVol,scepcalAssemblyVolId32);
-  ScepcalPlacedVol.addPhysVolID("system", 1);
+  ScepcalPlacedVol.addPhysVolID("system", 3);
   Scepcal.setPlacement(ScepcalPlacedVol);
 
   // Scepcal.addExtension< LayeredCalorimeterData >( barrelData ) ;
@@ -767,4 +768,4 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   return Scepcal;
 }
 
-DECLARE_DETELEMENT(SCEPCAL, create_detector)
+DECLARE_DETELEMENT(SCEPCAL_BE, create_detector)

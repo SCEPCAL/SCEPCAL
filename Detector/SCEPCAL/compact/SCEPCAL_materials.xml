@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<materials>
+  <material name="PbWO">
+    <D value="8.28" unit="g/cm3"/>
+    <composite n="1" ref="Pb"/>
+    <composite n="1" ref="W"/>
+    <composite n="4" ref="O"/>
+    <property name="RINDEX" ref="RI_PbWO"/>
+    <property name="ABSLENGTH" ref="AbsLen_PbWO"/>
+    <property name="SCINTILLATIONCOMPONENT1" ref="scintFast_PbWO"/>
+    <!-- <property name="ELECTRONSCINTILLATIONYIELD" ref="electronScintYield_PbWO"/> -->
+    <constant name="SCINTILLATIONYIELD" value="450/MeV"/> <!-- for 10% of detected cherenkov in PMTs, 1/MeV for debugging -->
+    <constant name="SCINTILLATIONTIMECONSTANT1" value="5.*ns"/>
+    <constant name="SCINTILLATIONTIMECONSTANT2" value="15.*ns"/>
+    <constant name="SCINTILLATIONRISETIME1" value="0.01*ns"/> <!-- careful on rise time -->
+    <constant name="RESOLUTIONSCALE" value="1."/>  <!-- 3.2 default value-->
+    <constant name="SCINTILLATIONYIELD1" value="0.3"/>
+
+  </material>
+
+  <material name="LYSO">
+    <D value="7.4" unit="g/cm3"/>
+    <composite n="2" ref="Lu"/>
+    <composite n="1" ref="Si"/>
+    <composite n="5" ref="O"/>
+    <property name="RINDEX" ref="RI_LYSO"/> <!-- Comment RINDEX to avoid cherenkov generation in timing layers -->
+    <property name="ABSLENGTH" ref="AbsLen_LYSO"/>
+    <property name="SCINTILLATIONCOMPONENT1" ref="scintFast_LYSO"/>
+    <constant name="SCINTILLATIONYIELD" value="40000/MeV"/>
+    <constant name="SCINTILLATIONTIMECONSTANT1" value="40.*ns"/>
+    <constant name="RESOLUTIONSCALE" value="3.4"/>
+    <constant name="SCINTILLATIONYIELD1" value="1.0"/>
+    <constant name="SCINTILLATIONRISETIME1" value="0.1*ns"/>
+  </material>
+
+</materials>

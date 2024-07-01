@@ -52,7 +52,7 @@ Vector3D SCEPCALSegmentation::myPosition(const CellID& cID) {
     int nPhi_in     = Phi(copyNum);
     int nDepth_in   = Depth(copyNum);
 
-    if (system==3) return Vector3D(0,0,0);
+    // if (system==3) return Vector3D(0,0,0);
 
     // if (fPositionOf.count(copyNum) == 0) { //Add if not found
 
