@@ -65,6 +65,7 @@ namespace dd4hep {
     Geant4SensitiveAction<ScepcalSDContainer>::process(const G4Step* step,G4TouchableHistory* /*hist*/ ) {
 
         G4double edep = step->GetTotalEnergyDeposit(); //*CLHEP::MeV/CLHEP::GeV;
+        
         if (edep == 0.) return false;
         typedef Geant4Calorimeter::Hit Hit;
         Geant4StepHandler    h(step);

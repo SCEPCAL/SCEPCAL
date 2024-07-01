@@ -511,7 +511,9 @@ SIM.physics.rangecut = 0.7
 ## 
 ##     Quarks, gluons and W's Z's etc should not be treated by Geant4
 ##     
-SIM.physics.rejectPDGs = {1, 2, 3, 4, 5, 6, 3201, 3203, 4101, 4103, 21, 23, 24, 5401, 25, 2203, 5403, 3101, 3103, 4403, 2101, 5301, 2103, 5303, 4301, 1103, 4303, 5201, 5203, 3303, 4201, 4203, 5101, 5103, 5503}
+SIM.physics.rejectPDGs = {1, 2, 3, 4, 5, 6, 3201, 3203, 4101, 4103, 21, 23, 24, 5401, 25, 2203, 5403, 
+                          3101, 3103, 4403, 2101, 5301, 2103, 5303, 4301, 1103, 4303, 5201, 5203, 3303, 
+                          4201, 4203, 5101, 5103, 5503}
 
 ## Set of PDG IDs for particles that should not be passed to Geant4 if their properTime is 0.
 ## 
