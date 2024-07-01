@@ -24,7 +24,7 @@ using dd4hep::Position;
 using dd4hep::rec::LayeredCalorimeterData;
 
 static dd4hep::Ref_t
-create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::SensitiveDetector sens) {
+create_detector_TL(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::SensitiveDetector sens) {
 
   // Import xml objects from compact xml
   xml_det_t detectorXML                   = xmlElement;
@@ -319,4 +319,4 @@ create_detector(dd4hep::Detector &theDetector, xml_h xmlElement, dd4hep::Sensiti
   return Scepcal;
 }
 
-DECLARE_DETELEMENT(SCEPCAL_TL, create_detector)
+DECLARE_DETELEMENT(SCEPCAL_TL, create_detector_TL)
