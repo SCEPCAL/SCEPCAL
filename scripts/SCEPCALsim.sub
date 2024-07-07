@@ -1,0 +1,9 @@
+executable            = SCEPCALsim.sh
+output                = output/SCEPCALsim$(ClusterId).$(ProcId).out
+error                 = output/SCEPCALsim$(ClusterId).$(ProcId).err
+log                   = output/SCEPCALsim$(ClusterId).$(ProcId).log
+should_transfer_files = Yes
+when_to_transfer_output = ON_EXIT
++JobFlavour="workday"
++MaxRuntime = 3600
+queue
