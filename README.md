@@ -22,12 +22,12 @@ See also:
 git clone git@github.com:SCEPCAL/SCEPCAL.git
 cd SCEPCAL
 
-export $TOP_DIR=$PWD
+export TOP_DIR=$PWD
 
 mkdir build
 mkdir install
 
-export $MY_INSTALL_DIR=$PWD/install
+export MY_INSTALL_DIR=$PWD/install
 
 source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 
