@@ -1072,7 +1072,7 @@
     </detector>
 
 
-
+<!-- 
     <detector id="3"
               name="Scepcal_TL" 
               type="SCEPCAL_TL" 
@@ -1109,7 +1109,7 @@
 
       <printDebug level="1"/>
 
-    </detector>
+    </detector> -->
 
 
 

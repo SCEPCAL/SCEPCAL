@@ -145,6 +145,8 @@ Detector and crystal dimensions can be changed in `install/share/compact/SCEPCAL
 
 Comment out the `<detector>` tag to remove a subdetector from the simulation.
 
+**The timing layer is commented out by default.**
+
 See the slides linked at the top for a brief description of the geometry parametrization and construction, or see it directly in `Detector/SCEPCAL/src/`.
 
 #### Material Properties
