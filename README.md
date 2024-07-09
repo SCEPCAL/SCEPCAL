@@ -155,7 +155,14 @@ Simulation results are heavily dependent on the material properties defined for 
 
 ### Running on Condor
 
-Change the user directory paths in `scripts/SCEPCALsim.sh` and `scripts/SCEPCALsim.sub` to your configuration and then run
+Change the user directory paths in `scripts/SCEPCALsim.sh` and `scripts/SCEPCALsim.sub` to your own, and also change the path of the compact XML file in `scripts/scepcal_steering.py` to the full absolute file path rather than the relative path, e.g.:
+
+```python
+# SIM.compactFile = ['install/share/compact/SCEPCAL.xml']
+SIM.compactFile = ['/eos/user/w/wochung/src/SCEPCAL/install/share/compact/SCEPCAL.xml']
+```
+
+and then run
 
 ```sh
 condor_submit scripts/SCEPCALsim.sub
