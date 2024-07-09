@@ -80,15 +80,15 @@ ddsim scripts/scepcal_steering.py
 
 #### Optical Physics
 
-Comment out line 195 in `scripts/scepcal_steering.py` to disable optical physics. Keep the line to enable if you are confident in your computing resources.
+Disabled by default. Uncomment line 195 in `scripts/scepcal_steering.py` to enable optical physics if you are confident in your computing resources.
 
 ```python
-SIM.physics.setupUserPhysics(setupCerenkovScint)
+# SIM.physics.setupUserPhysics(setupCerenkovScint)
 ```
 
 #### Energy Cuts
 
-It is important to set appropriate energy cuts. Energy deposits in the readout are accumulated per calorimeter cell; the energy cut referred to here takes effect at the Geant4 step level. Using an energy cut of 0 will work to show every single deposited hit but is not likely to be useful. See lines 56-62 of `scripts/scepcal_steering.py`. The default cut is set to 1 keV.
+You may change the energy cut if you wish. Energy deposits in the readout are accumulated per calorimeter cell; the energy cut here refers to the energy deposited per Geant4 particle step. Using an energy cut of 0 will work to show every single deposit but is not likely to be useful. See lines 56-62 of `scripts/scepcal_steering.py`. The default cut is set to 1 keV.
 
 ```python
 ... 'edep1keV': {'name': 'EnergyDepositMinimumCut/1keV', 'parameter': {'Cut': 1.0*keV }}
@@ -111,7 +111,7 @@ SIM.random.seed = 2126136508
 ddsim --steeringFile scripts/scepcal_steering.py -G --gun.direction "1 1 0" --gun.energy "1*GeV" --gun.particle="gamma" -O gamma_1GeV_noopt_1MeVcut.root
 ```
 
-`-G` and the following options tells the simulation to use the particle gun with the stated settings. Can additionally specify `--gun.position "0 0 0"`, etc. See the steering template file for more.
+`-G` and the following options tells the simulation to use the particle gun with the stated settings. Can additionally specify `--gun.position "0 0 0"`, etc. See the steering template file for more. **Note that a photon is called a gamma for the particle gun.**
 
 `-O` sets the output filename.
 
@@ -119,7 +119,7 @@ ddsim --steeringFile scripts/scepcal_steering.py -G --gun.direction "1 1 0" --gu
 
 #### Changing the Geometry
 
-Detector and crystal dimensions can be changed in `install/share/compact/SCEPCAL.xml`. This file is copied from `Detector/SCEPCAL/compact/SCEPCAL.xml` when you run `make install`, so any changes will be lost every time you run `make install`. The timing layer and Barrel/Endcap are written as separate subdetectors:
+Detector and crystal dimensions can be changed in `install/share/compact/SCEPCAL.xml`. This file is copied from `Detector/SCEPCAL/compact/SCEPCAL.xml` when you run `make install`, so any changes will be lost every time you run `make install`. The timing layer and barrel/endcap are written as separate subdetectors. **The timing layer is disabled by default.**
 
 ```xml
 <detectors>
@@ -132,6 +132,7 @@ Detector and crystal dimensions can be changed in `install/share/compact/SCEPCAL
         ...
     </detector>
     
+<-- Disabled by default
     <detector id="3"
                 name="Scepcal_TL" 
                 type="SCEPCAL_TL" 
@@ -140,18 +141,17 @@ Detector and crystal dimensions can be changed in `install/share/compact/SCEPCAL
                 sensitive="true">
         ...
     </detector>
+-->
 </detectors>
 ```
 
-Comment out the `<detector>` tag to remove a subdetector from the simulation.
-
-**The timing layer is commented out by default.**
+Uncomment the `<detector>` tag for the timing layer to enable it.
 
 See the slides linked at the top for a brief description of the geometry parametrization and construction, or see it directly in `Detector/SCEPCAL/src/`.
 
 #### Material Properties
 
-Simulation results are heavily dependent on the material properties defined for the detector, here we use LYSO crystals for the timing layer and PbWO4 for the barrel/endcap. These numbers are also defined in the compact XML file described above, however they are pulled from various sources and are by no means set in stone. Change the material properties as you like, or contact to collaborate about them.
+Simulation results are heavily dependent on the material properties defined for the detector, here we use LYSO crystals for the timing layer and PbWO4 for the barrel/endcap. The material properties are defined in the compact XML file described above, however they are pulled from various sources and are by no means set in stone. Change the material properties as you like, or contact to collaborate about them.
 
 ### Running on Condor
 
