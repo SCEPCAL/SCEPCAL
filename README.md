@@ -178,6 +178,8 @@ See `examples/SCEPCALanalysis.ipynb` for a simple example plotting calorimeter h
 
 The plot above is from `examples/wzp6_ee_ZZ_test_ecm240_n1_cut0_BEonly.root`, which shows 1 event with an energy cut of 0, Barrel/Endcap only (i.e. no timing layer).
 
+Note: edm4hep/key4hep are only supported on CentOS/AlmaLinux so if you are trying to run your notebook on a Mac, ROOT won't know the edm4hep class for the hits. One option is to run your notebook server on lxplus and connect your jupyter client to it, or, uncomment and change line 100 in `scripts/scepcal_steering.py` to `SIM.outputConfig.forceDD4HEP = True`. This will produce the output ROOT file in a 'plain' ROOT tree format instead of using the edm4hep classes, which you can then traverse with standard pyROOT calls. The example files are all in edm4hep format.
+
 The files `examples/gamma_10MeV_d<xyz>_BE_noopt_1MeVcut.root` correspond to runs with the particle gun, shooting gammas at 10 MeV in the xyz vector direction, from the origin, Barrel/Endcap only (i.e. no timing layer), with no optical physics, with a 1 MeV energy cut applied. Reproduce these runs and plot them to verify the particle gun is shooting as expected, and that the detector is oriented as expected.
 
 ### Collaborate and Contact
